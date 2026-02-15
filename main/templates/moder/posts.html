@@ -1,0 +1,270 @@
+			{{ template "top" . }}
+			{{define "base"}}
+			<div class="row">
+				<div class="col-12">
+					<h1 class="mb-3">{{ index .Lang "moderation_posts" }}</h1>
+				</div>
+			</div>
+			<div class="mb-3">
+				<form class="row row-cols-lg-auto g-3 align-items-center">
+					<div class="col-12">
+						<label class="visually-hidden" for="textSearchQuery">{{ index .Lang "moderation_posts_search_query" }}</label>
+						<div class="input-group">
+							<input type="text" class="form-control" id="textSearchQuery" placeholder="{{ index .Lang "moderation_posts_search_query" }}">
+						</div>
+					</div>
+					{{ if ge .CurrentModer.Level 1 }}
+					<div class="col-12">
+						<label class="visually-hidden" for="ipSearchQuery">{{ index .Lang "moderation_posts_search_ip" }}</label>
+						<div class="input-group">
+							<input type="text" class="form-control" id="ipSearchQuery" placeholder="{{ index .Lang "moderation_posts_search_ip" }}">
+						</div>
+					</div>
+					{{ end }}
+					<div class="col-12">
+						<div class="form-check">
+							<input class="form-check-input" type="checkbox" id="displayDeleted">
+							<label class="form-check-label" for="displayDeleted">{{ index .Lang "moderation_display_deleted" }}</label>
+						</div>
+					</div>
+					<div class="col-12">
+						<div class="form-check">
+							<input class="form-check-input" type="checkbox" id="enableAutoRefresh" onchange="isAutoRefreshEnabled = this.checked;">
+							<label class="form-check-label" for="enableAutoRefresh" id="enableAutoRefreshLabel">{{ index .Lang "moderation_enable_autorefresh" }}</label>
+						</div>
+					</div>
+					<div class="col-12">
+						<div class="text-secondary">{{ index .Lang "moderation_posts_search_hint" }}</div>
+					</div>
+				</form>
+			</div>
+			<div class="mb-3">
+				<div class="mod_actions" style="display:none;"><a href="#" class="btn btn-danger mod-action-delete">{{ index .Lang "moderation_posts_table_post_remove_selected" }}</a> <a href="#" class="btn btn-danger mod-action-ban">{{ index .Lang "moderation_posts_table_post_ban_selected" }}</a> <a href="#" class="btn btn-danger mod-action-delete_and_ban">{{ index .Lang "moderation_posts_table_post_remove_ban_selected" }}</a></div>
+				<table id="posts-table" class="display" style="width:100%">
+					<thead>
+						<tr>
+							<th nowrap width="190">#</th>
+							<th>{{ index .Lang "moderation_posts_table_post" }}</th>
+							{{ if ge .CurrentModer.Level 1 }}
+							<th width="190">{{ index .Lang "moderation_posts_table_poster" }}</th>
+							{{ end }}
+							<th width="170">{{ index .Lang "moderation_posts_table_post_actions" }}</th>
+						</tr>
+					</thead>
+					<tfoot>
+						<tr>
+							<th nowrap width="190">#</th>
+							<th>{{ index .Lang "moderation_posts_table_post" }}</th>
+							{{ if ge .CurrentModer.Level 1 }}
+							<th width="190">{{ index .Lang "moderation_posts_table_poster" }}</th>
+							{{ end }}
+							<th width="170">{{ index .Lang "moderation_posts_table_post_actions" }}</th>
+						</tr>
+					</tfoot>
+				</table>
+			</div>
+			<script>
+			var isAutoRefreshEnabled = false;
+			
+			function autoRefresh() {
+				if(isAutoRefreshEnabled) {
+					$('#enableAutoRefreshLabel').html('{{ index .Lang "moderation_autorefresh" }}');
+					$('#posts-table').DataTable().page('first').draw('page');
+				}
+			}
+					
+			$('body').on('change', '.turnmeoff', function() {
+				var checkedCount = $('.turnmeoff:checked').length;
+				
+				if(checkedCount > 0) {
+					$('.mod_actions').show();
+				} else {
+					$('.mod_actions').hide();
+				}
+			});
+			
+			$('.mod_actions').on('click', 'a', function(e) {
+				e.stopPropagation();
+				
+				var ids = [];
+				var action = $(this).attr('class').replace('btn btn-danger mod-action-', '');
+				
+				$('.turnmeoff:checked').each(function() {
+					ids.push($(this).val());
+				});
+				
+				openPostsActionModal(action, ids.join(','));
+				
+				return false;
+			});
+			
+			$(function() {
+				$('#textSearchQuery, #ipSearchQuery').keyup(delay(function(e) {
+					$('#posts-table').DataTable().page('first').draw('page');
+				}, 500));
+				
+				$('#displayDeleted').change(function() {
+					$('#posts-table').DataTable().page('first').draw('page');
+				});
+				
+				setInterval(autoRefresh, 5000);
+				
+				$('#posts-table').on('draw.dt', function () {
+					$('#enableAutoRefreshLabel').html('{{ index .Lang "moderation_enable_autorefresh" }}');
+				}).on('preXhr.dt', function (e, settings, data) {
+					data.query = $('#textSearchQuery').val();
+					data.ip = $('#ipSearchQuery').val();
+					data.deleted = $('#displayDeleted').prop('checked') ? '1' : '0';
+				}).dataTable({
+					pageLength: 50,
+					ordering: false,
+					serverSide: true,
+					searching: false,
+					ajax: '/moder/posts/search',
+					language: {
+						url: '/static/js/datatables-ru-posts.json',
+					},
+					columns: [
+						{ data: null, render: function ( data, type, row ) {
+							var html = '';
+							
+							if(row.deleted > 0) {
+								html += '<div><span class="badge text-bg-danger">' + (row.deleted_by_autodeletion == 1 ? 'Удалено по таймеру' : row.deleted_by_op == 1 ? '{{ index .Lang "moderation_posts_deleted_by_op" }}' : row.deleted_by_owner == 1 ? '{{ index .Lang "moderation_posts_deleted_by_owner" }}' : row.deleted_by_endless_excess == 1 ? '{{ index .Lang "moderation_posts_deleted_by_endless_excess" }}' : row.deleted_by_thread_deletion == 1 ? '{{ index .Lang "moderation_posts_deleted_by_thread_deletion" }}' : '{{ index .Lang "moderation_posts_deleted" }}') + '</span></div>';
+							} else if(row.banned > 0) {
+								html += '<div><span class="badge text-bg-warning">{{ index .Lang "moderation_posts_banned" }}</span></div>';
+							} else if(row.archived > 0) {
+								html += '<div><span class="badge text-bg-secondary">{{ index .Lang "moderation_posts_archived" }}</span></div>';
+							}
+							
+							html += '<input type="checkbox" name="delete" class="turnmeoff" value="' + row.board + ':' + row.num + '"> <div>/' + row.board + '/</div><div><a href="/moder/full/' + row.board + '/' + (row.parent > 0 ? row.parent : row.num) + '#' + row.num + '" target="_blank" class="link-underline link-underline-opacity-10">' + row.num + '</a></div>';
+							
+							if(row.parent > 0) {
+								html += '<div>({{ index .Lang "moderation_posts_reply_in_thread" }} <a href="/moder/full/' + row.board + '/' + row.parent + '" target="_blank" class="link-underline link-underline-opacity-10"><b>' + row.parent + '</b></a>)</div>';
+							} else {
+								html += '<div>({{ index .Lang "moderation_posts_thread" }})</div>';
+							}
+							
+							return html;
+						} },
+						{ data: null, render: function ( data, type, row ) {
+							var html = '';
+							
+							html += '<div>';
+							
+							if(row.email == 'mailto:sage') {
+								html += '<span class="text-danger">SAGE</span>&nbsp;&nbsp;';
+							}
+							
+							if(row.name != '') {
+								html += '<span class="text-secondary">' + row.name + '</span>&nbsp;&nbsp;';
+							}
+							
+							if(row.trip == '!!%coder%!!') {
+								html += '<span class="text-secondary"><span class="text-primary"><b style="color:#ed00e4;">## Coder ##</b></span> (' + row.moder_name + ')</span>&nbsp;&nbsp;';
+							} else if(row.trip == '!!%adm%!!') {
+								html += '<span class="text-secondary"><span class="text-danger"><b>## Admin ##</b></span> (' + row.moder_name + ')</span>&nbsp;&nbsp;';
+							} else if(row.trip == '!!%mod%!!') {
+								html += '<span class="text-secondary"><span class="text-primary">## Mod ##</span> (' + row.moder_name + ')</span>&nbsp;&nbsp;';
+							} else if(row.trip == '!!%junior%!!') {
+								html += '<span class="text-secondary"><span class="text-success">## Junior Mod ##</span> (' + row.moder_name + ')</span>&nbsp;&nbsp;';
+							} else if(row.trip != '') {
+								html += '<span class="text-secondary" style="color:#dd21dd !important;">' + row.trip + '</span>&nbsp;&nbsp;';
+							}
+							
+							if(row.trip != '!!%adm%!!' && row.trip != '!!%mod%!!' && row.trip != '!!%coder%!!' && row.moder_name != '') {
+								html += '<span class="text-secondary">MOD (' + row.moder_name + ')</span>&nbsp;&nbsp;';
+							}
+							
+							if(row.op == 1) {
+								html += '<span class="text-success"># OP</span>&nbsp;&nbsp;';
+							}
+							
+							html += '<span class="text-secondary">' + row.date + '</span>&nbsp;&nbsp;';
+							
+							if(row.autodeletion_timestamp > 0) {
+								html += '<span class="text-warning">до ' + row.autodeletion_date + '</span>&nbsp;&nbsp;';
+							}
+							
+							if(row.passcode_id > 0) {
+								html += '<span class="text-danger">{{ index .Lang "moderation_posts_passcode" }} <b>' + row.passcode_id + '</b></span>&nbsp;&nbsp;';
+							}
+							
+							html += '</div>';
+							
+							html += '<div class="mt-2">' + row.comment + '</div>';
+							
+							if(row.files != null && row.files.length > 0) {
+								html += '<div class="mt-3">';
+								
+								row.files.forEach(function callback(file, index) {
+									html += '<div class="post-file-wrapper">';
+									html += '<div class="mb-0"><a target="_blank" href="' + file.path + '" class="link-underline link-underline-opacity-10">' + file.displayname + '</a></div>';
+									html += '<div class="mb-1 text-secondary small">' + file.size + 'Kb, ' + file.width + 'x' + file.height + '' + (file.type == 10 ? (', ' + file.duration) : '') + '</div>';
+									html += '<a target="_blank" href="' + file.path + '">';
+									html += '<img class="post-file' + (file.type == 10 ? ' post-video' : '') + '" src="' + file.thumbnail + '" width="' + file.tn_width + '" height="' + file.tn_height + '" onerror="$(this).hide();">';
+									html += '</a>';
+									html += '</div>';
+								});
+								
+								html += '</div>';
+							}
+							
+							return html;
+						} },
+						{{ if ge .CurrentModer.Level 1 }}
+						{ data: null, render: function ( data, type, row ) {
+							var html = '';
+							
+							html += '<div><b>' + row.ip + '</b></div>';
+							
+							html += '<div class="mt-1">';
+							
+							if(row.ip_country_code != "") {
+								html += '<img hspace="3" src="/static/img/flags/' + row.ip_country_code + '.png" border="0" style="max-width:18px;max-height:12px;float:left;margin-top:5px;margin-right:5px;">';
+							}
+							
+							if(row.ip_country_name != "" || row.ip_city_name != "") {
+								var geoParts = [];
+								
+								if(row.ip_city_name != "") {
+									geoParts.push(row.ip_city_name);
+								}
+								
+								if(row.ip_country_name != "") {
+									geoParts.push(row.ip_country_name);
+								}
+								
+								html += '<span class="text-secondary">' + geoParts.join(', ') + '</span>';
+							}
+							
+							html += '</div>';
+							
+							return html;
+						} },
+						{{ end }}
+						{ data: null, render: function ( data, type, row ) {
+							var html = '';
+							
+							html += '<a class="btn btn-sm btn-outline-primary mb-1 me-1" target="_blank" href="/moder/posts/single?board=' + row.board + '&num=' + row.num + '">{{ index .Lang "moderation_posts_table_post_info" }}</a>';
+							
+							if(row.deleted == 0 && row.archived == 0) {
+								html += '<button type="button" class="btn btn-sm btn-outline-danger mb-1 me-1" onclick="openPostsActionModal(\'delete\', \'' + row.board + ':' + row.num + '\');">{{ index .Lang "moderation_posts_table_post_remove" }}</button>';
+								{{ if ge .CurrentModer.Level 1 }}
+								html += '<button type="button" class="btn btn-sm btn-outline-danger mb-1 me-1" onclick="openPostsActionModal(\'ban\', \'' + row.board + ':' + row.num + '\');">{{ index .Lang "moderation_posts_table_post_ban" }}</button>';
+								html += '<button type="button" class="btn btn-sm btn-outline-danger mb-1 me-1" onclick="openPostsActionModal(\'delete_and_ban\', \'' + row.board + ':' + row.num + '\');">{{ index .Lang "moderation_posts_table_post_remove_and_ban" }}</button>';
+								{{ end }}
+							} else if(row.deleted > 0 && row.deleted_by_endless_excess == 0 && row.deleted_by_thread_deletion == 0 && row.archived == 0) {
+								html += '<button type="button" class="btn btn-sm btn-outline-success mb-1 me-1" onclick="openPostsActionModal(\'restore\', \'' + row.board + ':' + row.num + '\');">{{ index .Lang "moderation_posts_table_post_restore" }}</button>';
+							}
+							
+							return html;
+						} },
+					]
+				});
+			});
+			</script>
+			<dialog id="mod-modal">
+				<iframe src="about:blank" width="500" id="mod-frame" scrolling="no"></iframe>
+			</dialog>
+			{{end}}
+			{{ template "bottom" . }}

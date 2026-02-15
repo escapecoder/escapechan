@@ -1,0 +1,38 @@
+			{{ template "top" . }}
+			{{define "base"}}
+			<div class="row">
+				<div class="col-6">
+					<h1 class="mb-3">{{ index .Lang "moderation_boards" }}</h1>
+				</div>
+				<div class="col-6 text-end">
+					<a href="/moder/boards/create" class="btn btn-secondary mt-2">{{ index .Lang "moderation_boards_create" }}</a>
+				</div>
+			</div>
+			{{if not .Boards}}
+			<div class="alert alert-light">{{ index .Lang "moderation_boards_empty" }}</div>
+			{{ else }}
+			<table class="table align-middle">
+				<thead>
+					<tr>
+						<th scope="col">{{ index .Lang "moderation_boards_table_id" }}</th>
+						<th scope="col">{{ index .Lang "moderation_boards_table_name" }}</th>
+						<th scope="col">{{ index .Lang "moderation_boards_table_threads" }}</th>
+						<th scope="col">{{ index .Lang "moderation_boards_table_posts" }}</th>
+						<th scope="col" width="100px">{{ index .Lang "moderation_boards_table_actions" }}</th>
+					</tr>
+				</thead>
+				<tbody class="table-group-divider">
+					{{ range $board := .Boards }}
+					<tr>
+						<th scope="row">{{ html $board.ID }}</th>
+						<td><a class="link-underline link-underline-opacity-10" href="/{{ html $board.ID }}/" target="_blank">{{ html $board.Name }}</a></td>
+						<td>{{ html $board.ActiveThreadsCount }}</td>
+						<td>{{ html $board.ActivePostsCount }}</td>
+						<td><a href="/moder/boards/{{ html $board.ID }}/edit" class="btn btn-outline-secondary btn-sm">{{ index $.Lang "moderation_boards_table_edit" }}</a></td>
+					</tr>
+					{{ end }}
+				</tbody>
+			</table>
+			{{end}}
+			{{end}}
+			{{ template "bottom" . }}

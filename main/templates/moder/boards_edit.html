@@ -1,0 +1,291 @@
+			{{ template "top" . }}
+			{{define "base"}}
+			<div class="bg-body-tertiary p-4 rounded">
+				<div class="row">
+					<div class="col-6">
+						<h1 class="mb-3">{{ if eq .IsCreate 1 }}{{ index .Lang "moderation_boards_creating" }}{{ else }}{{ index .Lang "moderation_boards_updating" }}{{ end }}</h1>
+					</div>
+					<div class="col-6 text-end">
+						<a href="/moder/boards" class="btn btn-secondary mt-2">{{ index .Lang "moderation_boards_go_to_list" }}</a>
+					</div>
+				</div>
+				<form action="/moder/boards/save" onsubmit="saveEntity(); return false;" method="POST" style="max-width:700px;" id="entity-form">
+					<input type="hidden" name="create" value="{{ .IsCreate }}">
+					<input type="hidden" name="ban_reasons" id="ban-reasons-input" value="{{ html .Board.BanReasons }}">
+					<input type="hidden" name="spamlist" id="spamlist-input" value="{{ html .Board.Spamlist }}">
+					<input type="hidden" name="replacements" id="replacements-input" value="{{ html .Board.Replacements }}">
+					{{ if eq .IsCreate 1 }}
+					<div class="mb-3">
+						<label class="form-label">{{ index .Lang "moderation_boards_id" }}</label>
+						<input type="text" name="id" class="form-control" value="{{ html .Board.ID }}">
+						<div class="form-text">{{ index .Lang "moderation_boards_id_hint" }}</div>
+					</div>
+					{{ else }}
+					<input type="hidden" name="id" value="{{ html .Board.ID }}">
+					{{ end }}
+					<div class="mb-3">
+						<label class="form-label">{{ index .Lang "moderation_boards_title" }}</label>
+						<input type="text" name="name" class="form-control" value="{{ html .Board.Name }}">
+						<div class="form-text">{{ index .Lang "moderation_boards_title_hint" }}</div>
+					</div>
+					<div class="mb-3">
+						<label class="form-label">{{ index .Lang "moderation_boards_category" }}</label>
+						<select name="category_id" class="form-select">
+							<option value="-1">-</option>
+							{{ range $categoryId, $categoryName := .Categories }}
+							<option value="{{ $categoryId }}"{{ if eq $.Board.CategoryId $categoryId }} selected{{ end }}>{{ html $categoryName }}</option>
+							{{ end }}
+						</select>
+					</div>
+					<div class="mb-3">
+						<label class="form-label">{{ index .Lang "moderation_boards_info" }}</label>
+						<textarea name="info" class="form-control">{{ html .Board.Info }}</textarea>
+						<div class="form-text">{{ index .Lang "moderation_boards_info_hint" }}</div>
+					</div>
+					<div class="mb-3">
+						<label class="form-label">{{ index .Lang "moderation_boards_default_name" }}</label>
+						<input type="text" name="default_name" class="form-control" value="{{ html .Board.DefaultName }}">
+						<div class="form-text">{{ index .Lang "moderation_boards_default_name_hint" }}</div>
+					</div>
+					<div class="mb-3">
+						<label class="form-label">{{ index .Lang "moderation_boards_allowed_file_types" }}</label>
+						<input type="text" name="file_types" class="form-control" value="{{ html .Board.FileTypes }}">
+					</div>
+					<div class="row">
+						<div class="col-6">
+							<div class="mb-3">
+								<label class="form-label">{{ index .Lang "moderation_boards_max_length" }}</label>
+								<input type="number" name="max_comment" class="form-control" value="{{ html .Board.MaxComment }}">
+							</div>
+						</div>
+						<div class="col-6">
+							<div class="mb-3">
+								<label class="form-label">{{ index .Lang "moderation_boards_max_files_size" }}</label>
+								<input type="number" name="max_files_size" class="form-control" value="{{ html .Board.MaxFilesSizeMB }}">
+							</div>
+						</div>
+					</div>
+					<div class="row">
+						<div class="col-6">
+							<div class="mb-3">
+								<label class="form-label">{{ index .Lang "moderation_boards_bumplimit" }}</label>
+								<input type="number" name="bump_limit" class="form-control" value="{{ html .Board.BumpLimit }}">
+								<div class="form-text">{{ index .Lang "moderation_boards_bumplimit_hint" }}</div>
+							</div>
+						</div>
+						<div class="col-6">
+							<div class="mb-3">
+								<label class="form-label">{{ index .Lang "moderation_boards_max_pages" }}</label>
+								<input type="number" name="max_pages" class="form-control" value="{{ html .Board.MaxPages }}">
+								<div class="form-text">{{ index .Lang "moderation_boards_max_pages_hint" }}</div>
+							</div>
+						</div>
+					</div>
+					<div class="mb-3">
+						<label class="form-label">{{ index .Lang "moderation_boards_local_ban_reasons" }}</label>
+						<div id="ban-reasons" style="max-width:500px;">
+							<div id="ban-reason-template" class="d-none">
+								<div class="row mb-2">
+									<div class="col-11">
+										<input type="text" class="form-control" placeholder="{{ index .Lang "moderation_boards_ban_reason" }}" onkeyup="buildBanReasonsJson();" maxlength="100">
+									</div>
+									<div class="col-1 d-grid gap-2">
+										<button type="button" class="btn btn-danger" onclick="removeBanReason(this);"><i class="las la-trash"></i></button>
+									</div>
+								</div>
+							</div>
+							<div id="ban-reasons-list"></div>
+							<button type="button" class="btn btn-secondary mb-2" onclick="addBanReason('');">{{ index .Lang "moderation_boards_local_ban_reasons_add" }}</button>
+						</div>
+					</div>
+					<div class="mb-3">
+						<label class="form-label">{{ index .Lang "moderation_boards_local_spamlist" }}</label>
+						<div id="sl" style="max-width:800px;">
+							<div id="spamlist-template" class="d-none">
+								<div class="row mb-2">
+									<div class="col-6">
+										<input type="text" class="form-control" placeholder="{{ index .Lang "moderation_boards_local_spamlist_string" }}" onkeyup="buildSpamlistJson();" maxlength="100">
+									</div>
+									<div class="col-5">
+										<select size="1" class="form-control" onchange="buildSpamlistJson();">
+											<option value="sequence">{{ index .Lang "moderation_boards_local_spamlist_chars_sequence" }}</option>
+											<option value="prefix">{{ index .Lang "moderation_boards_local_spamlist_word_prefix" }}</option>
+											<option value="word">{{ index .Lang "moderation_boards_local_spamlist_word" }}</option>
+										</select>
+									</div>
+									<div class="col-1 d-grid gap-2">
+										<button type="button" class="btn btn-danger" onclick="removeSpamlistWord(this);"><i class="las la-trash"></i></button>
+									</div>
+								</div>
+							</div>
+							<div id="spamlist"></div>
+							<button type="button" class="btn btn-secondary mb-2" onclick="addSpamlistWord('', 'sequence');">{{ index .Lang "moderation_boards_local_spamlist_add" }}</button>
+						</div>
+					</div>
+					<div class="mb-3">
+						<label class="form-label">Автозамены (работают только на этой доске):</label>
+						<div id="sl" style="max-width:800px;">
+							<div id="replacement-template" class="d-none">
+								<div class="row mb-2">
+									<div class="col-6">
+										<input type="text" class="form-control" placeholder="Исходная подстрока" onkeyup="buildReplacementsJson();" maxlength="100">
+									</div>
+									<div class="col-5">
+										<input type="text" class="form-control" placeholder="Результирующая подстрока" onkeyup="buildReplacementsJson();" maxlength="100">
+									</div>
+									<div class="col-1 d-grid gap-2">
+										<button type="button" class="btn btn-danger" onclick="removeReplacement(this);"><i class="las la-trash"></i></button>
+									</div>
+								</div>
+							</div>
+							<div id="replacements"></div>
+							<button type="button" class="btn btn-secondary mb-2" onclick="addReplacement('', '');">Добавить</button>
+						</div>
+					</div>
+					<div class="mb-3" hidden>
+						<span class="form-check">
+							<input type="checkbox" class="form-check-input" value="1" name="is_danger" id="is_danger"{{ if eq .Board.IsDanger 1 }} checked{{ end }}>
+							<label class="form-check-label" for="is_danger">Опасная доска</label>
+							<div class="form-text">Будет доступна только на домене с полной свободой от РКН.</div>
+						</span>
+					</div>
+					<div class="mb-3">
+						<span class="form-check">
+							<input type="checkbox" class="form-check-input" value="1" name="enable_posting" id="enable_posting"{{ if eq .Board.EnablePosting 1 }} checked{{ end }}>
+							<label class="form-check-label" for="enable_posting">{{ index .Lang "moderation_boards_enable_posting" }}</label>
+							<div class="form-text">{{ index .Lang "moderation_boards_enable_posting_hint" }}</div>
+						</span>
+					</div>
+					<div class="mb-3">
+						<span class="form-check">
+							<input type="checkbox" class="form-check-input" value="1" name="require_files_for_op" id="require_files_for_op"{{ if eq .Board.RequireFilesForOp 1 }} checked{{ end }}>
+							<label class="form-check-label" for="require_files_for_op">{{ index .Lang "moderation_boards_require_files_for_op" }}</label>
+							<div class="form-text">{{ index .Lang "moderation_boards_require_files_for_op_hint" }}</div>
+						</span>
+					</div>
+					<div class="mb-3">
+						<span class="form-check">
+							<input type="checkbox" class="form-check-input" value="1" name="enable_sage" id="enable_sage"{{ if eq .Board.EnableSage 1 }} checked{{ end }}>
+							<label class="form-check-label" for="enable_sage">{{ index .Lang "moderation_boards_enable_sage" }}</label>
+							<div class="form-text">{{ index .Lang "moderation_boards_enable_sage_hint" }}</div>
+						</span>
+					</div>
+					<div class="mb-3">
+						<span class="form-check">
+							<input type="checkbox" class="form-check-input" value="1" name="enable_flags" id="enable_flags"{{ if eq .Board.EnableFlags 1 }} checked{{ end }}>
+							<label class="form-check-label" for="enable_flags">{{ index .Lang "moderation_boards_enable_flags" }}</label>
+							<div class="form-text">{{ index .Lang "moderation_boards_enable_flags_hint" }}</div>
+						</span>
+					</div>
+					<div class="mb-3">
+						<span class="form-check">
+							<input type="checkbox" class="form-check-input" value="1" name="enable_trips" id="enable_trips"{{ if eq .Board.EnableTrips 1 }} checked{{ end }}>
+							<label class="form-check-label" for="enable_trips">{{ index .Lang "moderation_boards_enable_trips" }}</label>
+							<div class="form-text">{{ index .Lang "moderation_boards_enable_trips_hint" }}</div>
+						</span>
+					</div>
+					<div class="mb-3">
+						<span class="form-check">
+							<input type="checkbox" class="form-check-input" value="1" name="enable_op_mod" id="enable_op_mod"{{ if eq .Board.EnableOpMod 1 }} checked{{ end }}>
+							<label class="form-check-label" for="enable_op_mod">{{ index .Lang "moderation_boards_enable_op_mod" }}</label>
+							<div class="form-text">{{ index .Lang "moderation_boards_enable_op_mod_hint" }}</div>
+						</span>
+					</div>
+					<div class="mb-3">
+						<span class="form-check">
+							<input type="checkbox" class="form-check-input" value="1" name="enable_dices" id="enable_dices"{{ if eq .Board.EnableDices 1 }} checked{{ end }}>
+							<label class="form-check-label" for="enable_dices">{{ index .Lang "moderation_boards_enable_dices" }}</label>
+							<div class="form-text">{{ index .Lang "moderation_boards_enable_dices_hint" }}</div>
+						</span>
+					</div>
+					<div class="mb-3">
+						<span class="form-check">
+							<input type="checkbox" class="form-check-input" value="1" name="enable_likes" id="enable_likes"{{ if eq .Board.EnableLikes 1 }} checked{{ end }}>
+							<label class="form-check-label" for="enable_likes">{{ index .Lang "moderation_boards_enable_likes" }}</label>
+							<div class="form-text">{{ index .Lang "moderation_boards_enable_likes_hint" }}</div>
+						</span>
+					</div>
+					<div class="mb-3">
+						<span class="form-check">
+							<input type="checkbox" class="form-check-input" value="1" name="enable_reactions" id="enable_reactions" onchange="$('#enabled-reactions').toggleClass('d-none');"{{ if eq .Board.EnableReactions 1 }} checked{{ end }}>
+							<label class="form-check-label" for="enable_reactions">{{ index .Lang "moderation_boards_enable_reactions" }}</label>
+							<div class="form-text">{{ index .Lang "moderation_boards_enable_reactions_hint" }}</div>
+							<div class="mt-2{{ if eq .Board.EnableReactions 0 }} d-none{{ end }}" id="enabled-reactions">
+								<div class="row">
+									<div class="col-12">
+										<div class="mb-3">
+											<label class="form-label">{{ index .Lang "moderation_boards_enable_reactions_filenames" }} /static/img/reactions/:</label>
+											<textarea name="reactions" class="form-control" rows="5" maxlength="2048" placeholder="По одной на строку">{{ html .Board.Reactions }}</textarea>
+										</div>
+									</div>
+								</div>
+							</div>
+						</span>
+					</div>
+					<div class="mb-3">
+						<span class="form-check">
+							<input type="checkbox" class="form-check-input" value="1" name="enable_subject" id="enable_subject"{{ if eq .Board.EnableSubject 1 }} checked{{ end }}>
+							<label class="form-check-label" for="enable_subject">{{ index .Lang "moderation_boards_enable_subject" }}</label>
+							<div class="form-text">{{ index .Lang "moderation_boards_enable_subject_hint" }}</div>
+						</span>
+					</div>
+					<div class="mb-3">
+						<span class="form-check">
+							<input type="checkbox" class="form-check-input" value="1" name="enable_names" id="enable_names"{{ if eq .Board.EnableNames 1 }} checked{{ end }}>
+							<label class="form-check-label" for="enable_names">{{ index .Lang "moderation_boards_enable_names" }}</label>
+							<div class="form-text">{{ index .Lang "moderation_boards_enable_names_hint" }}</div>
+						</span>
+					</div>
+					<div class="mb-3">
+						<span class="form-check">
+							<input type="checkbox" class="form-check-input" value="1" name="enable_ids" id="enable_ids" onchange="$('#enabled-names').toggleClass('d-none');"{{ if eq .Board.EnableIds 1 }} checked{{ end }}>
+							<label class="form-check-label" for="enable_ids">{{ index .Lang "moderation_boards_enable_ids" }}</label>
+							<div class="form-text">{{ index .Lang "moderation_boards_enable_ids_hint" }}</div>
+							<div class="mt-2{{ if eq .Board.EnableIds 0 }} d-none{{ end }}" id="enabled-names">
+								<div class="row">
+									<div class="col-6">
+										<div class="mb-3">
+											<label class="form-label">{{ index .Lang "moderation_boards_enable_ids_male_adjectives" }}</label>
+											<textarea name="male_adjectives" class="form-control" rows="5" maxlength="2048" placeholder="{{ index .Lang "moderation_boards_enable_ids_one_per_line" }}">{{ html .Board.MaleAdjectives }}</textarea>
+										</div>
+									</div>
+									<div class="col-6">
+										<div class="mb-3">
+											<label class="form-label">{{ index .Lang "moderation_boards_enable_ids_male_proper_names" }}</label>
+											<textarea name="male_proper_names" class="form-control" rows="5" maxlength="2048" placeholder="{{ index .Lang "moderation_boards_enable_ids_one_per_line" }}">{{ html .Board.MaleProperNames }}</textarea>
+										</div>
+									</div>
+								</div>
+								<div class="row">
+									<div class="col-6">
+										<div class="mb-3">
+											<label class="form-label">{{ index .Lang "moderation_boards_enable_ids_female_adjectives" }}</label>
+											<textarea name="female_adjectives" class="form-control" rows="5" maxlength="2048" placeholder="{{ index .Lang "moderation_boards_enable_ids_one_per_line" }}">{{ html .Board.FemaleAdjectives }}</textarea>
+										</div>
+									</div>
+									<div class="col-6">
+										<div class="mb-3">
+											<label class="form-label">{{ index .Lang "moderation_boards_enable_ids_female_proper_names" }}</label>
+											<textarea name="female_proper_names" class="form-control" rows="5" maxlength="2048" placeholder="{{ index .Lang "moderation_boards_enable_ids_one_per_line" }}">{{ html .Board.FemaleProperNames }}</textarea>
+										</div>
+									</div>
+								</div>
+							</div>
+						</span>
+					</div>
+					<button type="submit" class="btn btn-primary btn-lg mt-4">{{ index .Lang "moderation_boards_save" }}</button>
+				</form>
+			</div>
+			<script>
+			var moderFormBanReasons = {{ .Board.BanReasons }};
+			var moderFormSpamlist = {{ .Board.Spamlist }};
+			var moderFormReplacements = {{ .Board.Replacements }};
+			$(function() {
+				initBanReasons();
+				initSpamlist();
+				initReplacements();
+				$('textarea[name=info]').summernote({height:150});
+			});
+			</script>
+			{{end}}
+			{{ template "bottom" . }}

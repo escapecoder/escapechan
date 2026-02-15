@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="ru" lang="ru">
+	<head>
+		<title>Главная</title>
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+		<meta name="viewport" content="initial-scale=1">
+		<link rel="preconnect" href="https://fonts.googleapis.com">
+		<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+		<link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;700&display=swap" rel="stylesheet">
+		<link href="/static/css/font-awesome.min.css" type="text/css" rel="stylesheet">
+		<link href="/static/css/index.css?v=6" type="text/css" rel="stylesheet">
+		<script type="text/javascript" src="/static/js/jquery.js"></script>
+		<script src="/static/js/index.js?v=3"></script>
+		<script src="https://code.jquery.com/ui/1.12.0/jquery-ui.js"></script>
+		<script type="text/javascript" src="/static/js/threadsubscribe.js?v=17"></script>
+		<link href="/static/css/threadsubscribe.css" type="text/css" rel="stylesheet">
+		<script>
+			(function() {
+				    window.st = localStorage.getItem('store') || '{}';
+					st = JSON.parse(st);
+					
+					const nm=e=>{e.hasOwnProperty("styling")?void 0===e.styling.nightmode?window.matchMedia&&window.matchMedia("(prefers-color-scheme: dark)").matches&&(document.documentElement.dataset.theme="nightmode"):!0===e.styling.nightmode&&(document.documentElement.dataset.theme="nightmode"):window.matchMedia&&window.matchMedia("(prefers-color-scheme: dark)").matches&&(document.documentElement.dataset.theme="nightmode")};nm(st);
+				})();
+		</script>
+	<body>
+		<header class="header" style="padding:20px 0;">
+			<img src="/static/img/logo.png" height="110">
+		</header>
+		<main class="main">
+			<section class="main__block main__meta">
+				<span class="paragraph">Эч</span> - это имиджборд, где возможно свободное общение и культурная дискуссия на различные темы. Ведите себя адекватно и соблюдайте правила и культуру общения.<br><br>
+				На данный момент открыто <strong>7</strong> досок. Скорость постинга на имиджборде <strong>132 п/ч</strong>, за всё время существования было оставлено <strong>243047</strong> постов.
+				<div class="buttons">
+				<a class="buttons__button" href="/user/passlogin" target="blank">Получить пасскод</a><a class="buttons__button" href="/b/">Начать общение</a>
+				<div>
+			</section>
+			<section class="main__block">
+				<header class="main__title">Открытые доски</header>
+				<section id="tabbed" class="tabs-wrapper">
+					<ul class="tabs-tabs">
+						<li><a href="#boards-tab">Доски</a></li>
+						<li><a href="#tracker-tab">Трекер</a></li>
+					</ul>
+					<section id="boards-tab" class="summary">
+						<div class="tabheader">
+							<a href="#" title="Алфавитный порядок" onclick="cloudBoard.display(cloudBoard.displaytype,'az'); return false;"><i class="fa fa-sort-alpha-asc"></i></a>
+							<a href="#" title="По скорости постинга" onclick="cloudBoard.display(cloudBoard.displaytype,'unique_posters'); return false;"><i class="fa fa-line-chart"></i></a>
+							<input type="text" placeholder="Фильтр" class="input" id="filter" size="8">
+						</div>
+						<div class="summary__table">
+							<div class="summary__row">
+								<div class="summary__cell summary__cell_f summary__cell_sm"><strong>Доска</strong></div>
+								<div class="summary__cell "><strong>Название</strong></div>
+								<!--<div class="summary__cell summary__cell_sm" title="Количество уникальных IP постеров за 24 часа. Это не просмотры, ридонли IP не учитываются."><strong>Уник IP</strong></div>
+								<div class="summary__cell desktop"><strong>Описание</strong></div>-->
+								<div class="summary__cell summary__cell_sm"><strong>Постов</strong></div>
+							</div>
+							<div id="js-summary-body"></div>
+						</div>
+					</section>
+					<section id="tracker-tab" class="tracker">
+						<div class="tabheader">
+							<input placeholder="доска" id="board" class="input" size="8" type="text">
+							<input type="button" value="Добавить" id="add-board" class="button">
+							<div>
+								Доски: [ <span class="boards-list"></span> ] [ <a href="#" class="update">Обновить (<span class="counter"></span>)</a> ]
+							</div>
+						</div>
+						<div class="tabheader">
+							<input type="button" value="Full" class="button" id="toggle-mode">
+							<select id="toggle-filter" class="input">
+								<option value="timestamp">Времени создания</option>
+								<option value="lasthit">Бампам</option>
+								<option value="posts_count">Кол-ву постов</option>
+							</select>
+							<div>Выводить <input placeholder="100" id="limit" class="input" size="3" type="text" value="50"> </div>
+							<div><label for="toggle-nsfw"><span title="nsfw">NSFW </span><input type="checkbox" id="toggle-nsfw" name="nsfw"></label></div>
+						</div>
+						<div id="data" class="tracker__data">
+							<script>Tracker.init()</script>
+						</div>
+					</section>
+				</section>
+			</section>
+		</main>
+		<footer>
+			<script>tmp_id = null; tmp_board = null;tmp_likes=null;tmp_enable_oekaki = null;tmp_enable_subject = null;tmp_max_files_size = null;tmp_twochannel = 0;	tmp_max_comment = null;	tmp_adv_img = null;tmp_adv_lnk = null;tmp_styles=[];
+				window.Store={memory:{},type:null,init:function(){;if(this.html5_available()){this.type='html5';this.html5_load()}else if(this.cookie_available()){this.type='cookie';this.cookie_load()}},get:function(path,default_value){var path_array=this.parse_path(path);if(!path_array)return default_value;var pointer=this.memory;var len=path_array.length;for(var i=0;i<len-1;i++){var element=path_array[i];if(!pointer.hasOwnProperty(element))return default_value;pointer=pointer[element]} var ret=pointer[path_array[i]];if(typeof(ret)=='undefined')return default_value;return ret},set:function(path,value){if(typeof(value)=='undefined')return!1;if(this.type)this[this.type+'_load']();var path_array=this.parse_path(path);if(!path_array)return!1;var pointer=this.memory;var len=path_array.length;for(var i=0;i<len-1;i++){var element=path_array[i];if(!pointer.hasOwnProperty(element))pointer[element]={};pointer=pointer[element];if(typeof(pointer)!='object')return!1} pointer[path_array[i]]=value;if(this.type)this[this.type+'_save']();return!0},del:function(path){var path_array=this.parse_path(path);if(!path_array)return!1;if(this.type)this[this.type+'_load']();var pointer=this.memory;var len=path_array.length;var element,i;for(i=0;i<len-1;i++){element=path_array[i];if(!pointer.hasOwnProperty(element))return!1;pointer=pointer[element]} if(pointer.hasOwnProperty(path_array[i]))delete(pointer[path_array[i]]);this.cleanup(path_array);if(this.type)this[this.type+'_save']();return!0},cleanup:function(path_array){var pointer=this.memory;var objects=[this.memory];var len=path_array.length;var i;for(i=0;i<len-2;i++){var element=path_array[i];pointer=pointer[element];objects.push(pointer)} for(i=len-2;i>=0;i--){var object=objects[i];var key=path_array[i];var is_empty=!0;$.each(object[key],function(){is_empty=!1;return!1});if(!is_empty)return!0;delete(object[key])}},reload:function(){if(this.type)this[this.type+'_load']()},'export':function(){return JSON.stringify(this.memory)},'import':function(data){try{this.memory=JSON.parse(data);if(this.type)this[this.type+'_save']();return!0}catch(e){return!1}},parse_path:function(path){var test=path.match(/[a-zA-Z0-9_\-\.]+/);if(test==null)return!1;if(!test.hasOwnProperty('0'))return!1;if(test[0]!=path)return!1;return path.split('.')},html5_available:function(){if(!window.Storage)return!1;if(!window.localStorage)return!1;try{localStorage.__storage_test='stortest';if(localStorage.__storage_test!='stortest')return!1;localStorage.removeItem('__storage_test');return!0}catch(e){return!1}},html5_load:function(){if(!localStorage.store)return;this.memory=JSON.parse(localStorage.store)},html5_save:function(){localStorage.store=JSON.stringify(this.memory)},cookie_available:function(){try{setCookie('__storage_test','stortest');if(getCookie('__storage_test')!='stortest')return!1;delCookie('__storage_test');return!0}catch(e){return!1}},cookie_load:function(){var str=getCookie('store');if(!str)return;this.memory=JSON.parse(str)},cookie_save:function(){var str=JSON.stringify(this.memory);setCookie('store',str,365*5)}}
+						Store.init();
+							
+						cloudBoard.getdata();
+						cloudBoard.getnews();
+						
+						$( function() {
+							$( "#tabbed" ).tabs({ 
+								active: Store.get('other.index.active',0),
+								activate: function(event, ui){
+									Store.set('other.index.active', ui.newTab.index());
+								},
+							});
+						} );
+				
+						var filterStyle = $('#cloudstyle');
+						var htmlstyle;
+						$('#filter').on('input', function() {cloudBoard.findb(this.value)} );
+					
+			</script>
+		</footer>
+	</body>
+</html>

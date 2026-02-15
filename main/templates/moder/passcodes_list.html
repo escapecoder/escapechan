@@ -1,0 +1,118 @@
+			{{ template "top" . }}
+			{{define "base"}}
+			<div class="row">
+				<div class="col-6">
+					<h1 class="mb-3">Пасскоды</h1>
+				</div>
+				<div class="col-6 text-end">
+					<a href="/moder/passcodes/create" class="btn btn-secondary mt-2">Добавить пасскод</a>
+				</div>
+			</div>
+			<div class="mb-3">
+				<form class="row row-cols-lg-auto g-3 align-items-center">
+					<div class="col-12">
+						<label class="visually-hidden" for="textSearchId"">Поиск по ID</label>
+						<div class="input-group">
+							<input type="text" class="form-control" id="textSearchId" placeholder="Поиск по ID">
+						</div>
+					</div>
+					<div class="col-12">
+						<label class="visually-hidden" for="textSearchQuery"">Поиск по пасскоду или его части</label>
+						<div class="input-group">
+							<input type="text" class="form-control" style="width:300px;max-width:100%;" id="textSearchQuery" placeholder="Поиск по пасскоду или его части">
+						</div>
+					</div>
+				</form>
+			</div>
+			<div class="mb-3">
+				<table id="passcodes-table" class="display" style="width:100%">
+					<thead>
+						<tr>
+							<th nowrap width="190">#</th>
+							<th>Пасскод</th>
+							<th nowrap width="100">Telegram</th>
+							<th nowrap width="190">Выдан</th>
+							<th nowrap width="190">Истекает</th>
+							<th width="170">Действия</th>
+						</tr>
+					</thead>
+					<tfoot>
+						<tr>
+							<th nowrap width="190">#</th>
+							<th>Пасскод</th>
+							<th nowrap width="100">Telegram</th>
+							<th nowrap width="190">Выдан</th>
+							<th nowrap width="190">Истекает</th>
+							<th width="170">Действия</th>
+						</tr>
+					</tfoot>
+				</table>
+			</div>
+			<script>
+			function cancelBan(id) {
+				if(confirm('{{ index .Lang "moderation_passcodes_table_cancel_are_you_sure" }}')) {
+					$.post('/moder/passcodes/cancel', 'id=' + id, function() {
+						$('#ban-status-' + id).html('<span class="badge text-bg-success">{{ index .Lang "moderation_passcodes_table_canceled" }}</span>');
+						$('#cancel-ban-button-' + id).remove();
+					});
+				}
+			}
+			
+			$(function() {
+				$('#textSearchQuery, #textSearchId').keyup(delay(function(e) {
+					$('#passcodes-table').DataTable().page('first').draw('page');
+				}, 500));
+				
+				$('#passcodes-table').on('preXhr.dt', function (e, settings, data) {
+					data.id = $('#textSearchId').val();
+					data.query = $('#textSearchQuery').val();
+				}).dataTable({
+					pageLength: 50,
+					ordering: false,
+					serverSide: true,
+					searching: false,
+					ajax: '/moder/passcodes/search',
+					language: {
+						url: '/static/js/datatables-ru-passcodes.json',
+					},
+					columns: [
+						{ data: null, render: function ( data, type, row ) {
+							var html = '';
+							
+							if(row.banned > 0) {
+								html += '<div id="ban-status-' + row.id + '"><span class="badge text-bg-danger">Забанен</span></div>';
+							} else if(row.ended > 0) {
+								html += '<div id="ban-status-' + row.id + '"><span class="badge text-bg-warning">Недействителен</span></div>';
+							} else {
+								html += '<div id="ban-status-' + row.id + '"><span class="badge text-bg-success">Активен</span></div>';
+							}
+							
+							html += '<div>ID: ' + row.id + '</div>';
+							
+							return html;
+						} },
+						{ data: null, render: function ( data, type, row ) {
+							return row.code;
+						} },
+						{ data: null, render: function ( data, type, row ) {
+							return row.tg_id;
+						} },
+						{ data: null, render: function ( data, type, row ) {
+							return row.date;
+						} },
+						{ data: null, render: function ( data, type, row ) {
+							return row.date_expires;
+						} },
+						{ data: null, render: function ( data, type, row ) {
+							var html = '';
+							
+							html += '<a class="btn btn-sm btn-outline-secondary mb-1 me-1" href="/moder/passcodes/' + row.id + '/edit">Редактировать</a>';
+							
+							return html;
+						} },
+					]
+				});
+			});
+			</script>
+			{{end}}
+			{{ template "bottom" . }}

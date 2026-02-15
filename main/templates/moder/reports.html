@@ -1,0 +1,232 @@
+			{{ template "top" . }}
+			{{define "base"}}
+			<div class="row">
+				<div class="col-12">
+					<h1 class="mb-3">{{ index .Lang "moderation_reports" }}</h1>
+				</div>
+			</div>
+			<div class="mb-3">
+				<form class="row row-cols-lg-auto g-3 align-items-center">
+					<div class="col-12">
+						<label class="visually-hidden" for="textSearchQuery">{{ index .Lang "moderation_reports_search_query" }}</label>
+						<div class="input-group">
+							<input type="text" class="form-control" id="textSearchQuery" placeholder="{{ index .Lang "moderation_reports_search_query" }}">
+						</div>
+					</div>
+					<div class="col-12">
+						<label class="visually-hidden" for="ipSearchQuery">{{ index .Lang "moderation_reports_search_ip" }}</label>
+						<div class="input-group">
+							<input type="text" class="form-control" id="ipSearchQuery" placeholder="{{ index .Lang "moderation_reports_search_ip" }}">
+						</div>
+					</div>
+					<div class="col-12">
+						<div class="form-check">
+							<input class="form-check-input" type="checkbox" id="displayProcessed">
+							<label class="form-check-label" for="displayProcessed">{{ index .Lang "moderation_reports_display_processed" }}</label>
+						</div>
+					</div>
+					<div class="col-12">
+						<div class="text-secondary">{{ index .Lang "moderation_reports_search_hint" }}</div>
+					</div>
+				</form>
+			</div>
+			<div class="mb-3">
+				<table id="reports-table" class="display" style="width:100%">
+					<thead>
+						<tr>
+							<th nowrap width="190">#</th>
+							<th>{{ index .Lang "moderation_reports_table_report_and_post" }}</th>
+							<th width="190">{{ index .Lang "moderation_posts_table_poster" }}</th>
+							<th width="170">{{ index .Lang "moderation_posts_table_post_actions" }}</th>
+						</tr>
+					</thead>
+					<tfoot>
+						<tr>
+							<th nowrap width="190">#</th>
+							<th>{{ index .Lang "moderation_reports_table_report_and_post" }}</th>
+							<th width="190">{{ index .Lang "moderation_posts_table_poster" }}</th>
+							<th width="170">{{ index .Lang "moderation_posts_table_post_actions" }}</th>
+						</tr>
+					</tfoot>
+				</table>
+			</div>
+			<script>
+			function ignoreReport(id) {
+				if(confirm('{{ index .Lang "moderation_reports_table_ignore_are_you_sure" }}')) {
+					$.post('/moder/reports/ignore', 'id=' + id, function() {
+						$('#report-status-' + id).html('<span class="badge text-bg-warning">{{ index .Lang "moderation_reports_table_ignored" }}</span>');
+						$('#ignore-report-button-' + id).remove();
+					});
+				}
+			}
+			
+			$(function() {
+				$('#textSearchQuery, #ipSearchQuery').keyup(delay(function(e) {
+					$('#reports-table').DataTable().page('first').draw('page');
+				}, 500));
+				
+				$('#displayProcessed').change(function() {
+					$('#reports-table').DataTable().page('first').draw('page');
+				});
+				
+				$('#reports-table').on('preXhr.dt', function (e, settings, data) {
+					data.query = $('#textSearchQuery').val();
+					data.ip = $('#ipSearchQuery').val();
+					data.processed = $('#displayProcessed').prop('checked') ? '1' : '0';
+				}).dataTable({
+					pageLength: 50,
+					ordering: false,
+					serverSide: true,
+					searching: false,
+					ajax: '/moder/reports/search',
+					language: {
+						url: '/static/js/datatables-ru-reports.json',
+					},
+					columns: [
+						{ data: null, render: function ( data, type, row ) {
+							var html = '';
+							
+							if(row.processed > 0) {
+								html += '<div id="report-status-' + row.id + '"><span class="badge text-bg-success">{{ index .Lang "moderation_reports_table_processed" }}</span></div>';
+							} else if(row.processed < 0) {
+								html += '<div id="report-status-' + row.id + '"><span class="badge text-bg-warning">{{ index .Lang "moderation_reports_table_ignored" }}</span></div>';
+							} else if(row.processed == 0) {
+								html += '<div id="report-status-' + row.id + '"><span class="badge text-bg-info">{{ index .Lang "moderation_reports_table_waiting_for_processing" }}</span></div>';
+							}
+							
+							html += '<div>Репорт: ' + row.id + '</div><div>{{ index .Lang "moderation_reports_table_post" }}: /' + row.board + '/ <a href="/moder/full/' + row.board + '/' + (row.parent > 0 ? row.parent : row.num) + '#' + row.num + '" target="_blank" class="link-underline link-underline-opacity-10">' + row.num + '</a></div>';
+							
+							if(row.parent > 0) {
+								html += '<div>({{ index .Lang "moderation_posts_reply_in_thread" }} <a href="/moder/full/' + row.board + '/' + row.parent + '" target="_blank" class="link-underline link-underline-opacity-10"><b>' + row.parent + '</b></a>)</div>';
+							} else {
+								html += '<div>({{ index .Lang "moderation_posts_thread" }})</div>';
+							}
+							
+							return html;
+						} },
+						{ data: null, render: function ( data, type, row ) {
+							var html = '';
+							
+							html += '<div>';
+							
+							html += '<span class="text-secondary">' + row.date + '</span>&nbsp;&nbsp;';
+							
+							html += '<span class="text-secondary">{{ index .Lang "moderation_reports_table_reporter_ip" }}: ' + row.ip + '</span>&nbsp;&nbsp;';
+							
+							html += '</div>';
+							
+							html += '<div class="mt-2"><b>' + row.comment.replaceAll('<', '&lt;').replaceAll('>', '&gt;') + '</b></div>';
+							
+							html += '<div style="border-left: 5px solid #cccccc;padding-left:10px;margin-top:20px;">';
+							
+							html += '<div>';
+							
+							if(row.post.email == 'mailto:sage') {
+								html += '<span class="text-danger">SAGE</span>&nbsp;&nbsp;';
+							}
+							
+							if(row.post.name != '') {
+								html += '<span class="text-secondary">' + row.post.name + '</span>&nbsp;&nbsp;';
+							}
+							
+							if(row.post.trip == '!!%coder%!!') {
+								html += '<span class="text-secondary"><span class="text-primary"><b style="color:#ed00e4;">## Coder ##</b></span> (' + row.post.moder_name + ')</span>&nbsp;&nbsp;';
+							} else if(row.post.trip == '!!%adm%!!') {
+								html += '<span class="text-secondary"><span class="text-danger"><b>## Admin ##</b></span> (' + row.post.moder_name + ')</span>&nbsp;&nbsp;';
+							} else if(row.post.trip == '!!%mod%!!') {
+								html += '<span class="text-secondary"><span class="text-primary">## Mod ##</span> (' + row.post.moder_name + ')</span>&nbsp;&nbsp;';
+							} else if(row.post.trip == '!!%junior%!!') {
+								html += '<span class="text-secondary"><span class="text-success">## Junior Mod ##</span> (' + row.post.moder_name + ')</span>&nbsp;&nbsp;';
+							} else if(row.post.trip != '') {
+								html += '<span class="text-secondary" style="color:#dd21dd !important;">' + row.post.trip + '</span>&nbsp;&nbsp;';
+							}
+							
+							if(row.post.op == 1) {
+								html += '<span class="text-success"># OP</span>&nbsp;&nbsp;';
+							}
+							
+							html += '<span class="text-secondary">' + row.post.date + '</span>&nbsp;&nbsp;';
+							
+							html += '</div>';
+							
+							html += '<div class="mt-2">' + row.post.comment + '</div>';
+							
+							if(row.post.files != null && row.post.files.length > 0) {
+								html += '<div class="mt-3">';
+								
+								row.post.files.forEach(function callback(file, index) {
+									html += '<div class="post-file-wrapper">';
+									html += '<div class="mb-0"><a target="_blank" href="' + file.path + '" class="link-underline link-underline-opacity-10">' + file.displayname + '</a></div>';
+									html += '<div class="mb-1 text-secondary small">' + file.size + 'Kb, ' + file.width + 'x' + file.height + '' + (file.type == 10 ? (', ' + file.duration) : '') + '</div>';
+									html += '<a target="_blank" href="' + file.path + '">';
+									html += '<img class="post-file' + (file.type == 10 ? ' post-video' : '') + '" src="' + file.thumbnail + '" width="' + file.tn_width + '" height="' + file.tn_height + '" onerror="$(this).hide();">';
+									html += '</a>';
+									html += '</div>';
+								});
+								
+								html += '</div>';
+							}
+							
+							html += '</div>';
+							
+							return html;
+						} },
+						{ data: null, render: function ( data, type, row ) {
+							var html = '';
+							
+							html += '<div><b>' + row.post.ip + '</b></div>';
+							
+							html += '<div class="mt-1">';
+							
+							if(row.post.ip_country_code != "") {
+								html += '<img hspace="3" src="/static/img/flags/' + row.post.ip_country_code + '.png" border="0" style="max-width:18px;max-height:12px;float:left;margin-top:5px;margin-right:5px;">';
+							}
+							
+							if(row.post.ip_country_name != "" || row.post.ip_city_name != "") {
+								var geoParts = [];
+								
+								if(row.post.ip_city_name != "") {
+									geoParts.push(row.post.ip_city_name);
+								}
+								
+								if(row.post.ip_country_name != "") {
+									geoParts.push(row.post.ip_country_name);
+								}
+								
+								html += '<span class="text-secondary">' + geoParts.join(', ') + '</span>';
+							}
+							
+							html += '</div>';
+							
+							return html;
+						} },
+						{ data: null, render: function ( data, type, row ) {
+							var html = '';
+							
+							html += '<a class="btn btn-sm btn-outline-primary mb-1 me-1" target="_blank" href="/moder/posts/single?board=' + row.board + '&num=' + row.num + '">{{ index .Lang "moderation_posts_table_post_info" }}</a>';
+							
+							if(row.processed <= 0) {
+								if(row.post.deleted == 0 && row.post.archived == 0) {
+									html += '<button type="button" class="btn btn-sm btn-outline-danger mb-1 me-1" onclick="openPostsActionModal(\'delete\', \'' + row.board + ':' + row.num + '\');">{{ index .Lang "moderation_posts_table_post_remove" }}</button>';
+									html += '<button type="button" class="btn btn-sm btn-outline-danger mb-1 me-1" onclick="openPostsActionModal(\'ban\', \'' + row.board + ':' + row.num + '\');">{{ index .Lang "moderation_posts_table_post_ban" }}</button>';
+									html += '<button type="button" class="btn btn-sm btn-outline-danger mb-1 me-1" onclick="openPostsActionModal(\'delete_and_ban\', \'' + row.board + ':' + row.num + '\');">{{ index .Lang "moderation_posts_table_post_remove_and_ban" }}</button>';
+								}
+							}
+							
+							if(row.processed == 0) {
+								//if(row.post.deleted == 0 && row.post.archived == 0) {
+									html += '<button type="button" class="btn btn-sm btn-outline-warning mb-1 me-1" id="ignore-report-button-' + row.id + '" onclick="ignoreReport(\'' + row.id + '\');">{{ index .Lang "moderation_reports_table_ignore" }}</button>';
+								//}
+							}
+							
+							return html;
+						} },
+					]
+				});
+			});
+			</script>
+			<dialog id="mod-modal">
+				<iframe src="about:blank" width="500" id="mod-frame" scrolling="no"></iframe>
+			</dialog>
+			{{end}}
+			{{ template "bottom" . }}

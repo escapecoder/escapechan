@@ -1,0 +1,119 @@
+			{{ template "top" . }}
+			{{define "base"}}
+			<div class="row">
+				<div class="col-12">
+					<h1 class="mb-3">{{ index .Lang "moderation_modlog" }}</h1>
+				</div>
+			</div>
+			{{ if eq .CurrentModer.Level 4 }}
+			<div class="alert alert-success">{{ index .Lang "moderation_modlog_notification_1" }}</div>
+			{{ else if eq .CurrentModer.Level 1 }}
+			<div class="alert alert-warning">{{ index .Lang "moderation_modlog_notification_2" }}</div>
+			{{ else if eq .CurrentModer.Level 0 }}
+			<div class="alert alert-warning">{{ index .Lang "moderation_modlog_notification_3" }}</div>
+			{{ else }}
+			<div class="alert alert-info">{{ index .Lang "moderation_modlog_notification_4" }}</div>
+			{{ end }}
+			{{ if eq .CurrentModer.Level 5 }}
+			<div class="mb-3">
+				<form class="row row-cols-lg-auto g-3 align-items-center">
+					<div class="col-12">
+						<label class="visually-hidden" for="idSearchQuery">{{ index .Lang "moderation_bans_search_id" }}</label>
+						<div class="input-group">
+							<input type="text" class="form-control" id="idSearchQuery" placeholder="{{ index .Lang "moderation_bans_search_id" }}">
+						</div>
+					</div>
+					<div class="col-12">
+						<label class="visually-hidden" for="textSearchQuery">{{ index .Lang "moderation_bans_search_query" }}</label>
+						<div class="input-group">
+							<input type="text" class="form-control" id="textSearchQuery" placeholder="{{ index .Lang "moderation_bans_search_query" }}">
+						</div>
+					</div>
+					<div class="col-12">
+						<label class="visually-hidden" for="ipSearchQuery">{{ index .Lang "moderation_bans_search_ip" }}</label>
+						<div class="input-group">
+							<input type="text" class="form-control" id="ipSearchQuery" placeholder="{{ index .Lang "moderation_bans_search_ip" }}">
+						</div>
+					</div>
+					<div class="col-12">
+						<div class="text-secondary">{{ index .Lang "moderation_bans_search_hint" }}</div>
+					</div>
+				</form>
+			</div>
+			{{ end }}
+			<div class="mb-3">
+				<table id="modlog-table" class="display" style="width:100%">
+					<thead>
+						<tr>
+							<th width="100">{{ index .Lang "moderation_modlog_table_moder" }}</th>
+							<th>{{ index .Lang "moderation_modlog_table_action" }}</th>
+							<th width="190">{{ index .Lang "moderation_modlog_table_date" }}</th>
+						</tr>
+					</thead>
+					<tfoot>
+						<tr>
+							<th width="100">{{ index .Lang "moderation_modlog_table_moder" }}</th>
+							<th>{{ index .Lang "moderation_modlog_table_action" }}</th>
+							<th width="190">{{ index .Lang "moderation_modlog_table_date" }}</th>
+						</tr>
+					</tfoot>
+				</table>
+			</div>
+			<script>
+			$(function() {
+				$('#idSearchQuery, #textSearchQuery, #ipSearchQuery').keyup(delay(function(e) {
+					$('#modlog-table').DataTable().page('first').draw('page');
+				}, 500));
+				
+				$('#modlog-table').on('preXhr.dt', function (e, settings, data) {
+					data.id = $('#idSearchQuery').val();
+					data.query = $('#textSearchQuery').val();
+					data.ip = $('#ipSearchQuery').val();
+				}).dataTable({
+					pageLength: 50,
+					ordering: false,
+					serverSide: true,
+					searching: false,
+					ajax: '/moder/modlog/search',
+					language: {
+						url: '/static/js/datatables-ru-modlog.json',
+					},
+					columns: [
+						{ data: null, render: function ( data, type, row ) {
+							return row.moder_name;
+						} },
+						{ data: null, render: function ( data, type, row ) {
+							var html = '';
+							
+							if(row.action == 'delete' && row.delall == 1) {
+								html += '<b class="text-danger">[DELALL]</b> ';
+							}
+
+							html += row.action_explanation + ' ';
+							
+							if(row.action == 'unban') {
+								html += '#' + row.ban_id + ' '
+							} else if(row.action == 'ban') {
+								html += '<b>' + row.ip_subnet + '</b> ' + row.date_end + ' ' + (row.anywhere == 1 ? '{{ index .Lang "moderation_modlog_table_on_all_boards" }} ' : '{{ index .Lang "moderation_modlog_table_on_board" }} /' + row.board + '/')
+								html += ' {{ index .Lang "moderation_modlog_table_by_reason" }}: ' + row.reason + ' '
+							} else if(row.action == 'move') {
+								html += '<a target="_blank" href="/moder/posts/single?board=' + row.new_board + '&num=' + row.num + '" class="link-underline link-underline-opacity-10">#' + row.num + '</a> {{ index .Lang "moderation_modlog_table_from_board" }} /' + row.board + '/ {{ index .Lang "moderation_modlog_table_to_board" }} /' + row.new_board + '/ '
+							} else {
+								html += '<a target="_blank" href="/moder/posts/single?board=' + row.board + '&num=' + row.num + '" class="link-underline link-underline-opacity-10">#' + row.num + '</a> {{ index .Lang "moderation_modlog_table_on_board" }} /' + row.board + '/ '
+								
+								if(row.action == 'delete') {
+									html += ' {{ index .Lang "moderation_modlog_table_by_reason" }}: ' + row.reason + ' '
+								}
+							}
+							
+							return html;
+						} },
+						{ data: null, render: function ( data, type, row ) {
+							return row.date;
+						} },
+					]
+				});
+			});
+			</script>
+			{{end}}
+			{{ template "bottom" . }}

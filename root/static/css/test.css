@@ -1,0 +1,121 @@
+.makaba {
+    background: linear-gradient(to bottom, #dbd1e1 0%, #e4ebe6 16%, #e1e1e1 83%);
+    font-size: 18px;
+    line-height: 1.5;
+}
+.makaba a {
+    color: #ad16ad;
+}
+.makaba .post__image-link {
+    height: 160px;
+    display: block;
+    border-radius: 8px;
+    overflow: hidden;
+    transition: 0.3s all ease-in;
+}
+.makaba .post__image-link:hover img,
+.makaba .post__image-link:focus img {
+    transform: scale(1.1);
+
+}
+.makaba .post__image-link img {
+    height: 100%;
+    transition: 0.3s all ease-in;
+    object-fit: cover;
+    object-position: top center;
+    width: 100%;
+}
+.makaba .post_type_reply {
+    padding: 20px;
+    border: 1px solid #c3c3c3;
+    border-radius: 8px;
+    background: #ebe4e6;
+}
+.makaba .post_anon {
+    text-decoration: underline;
+}
+span#ABU-select a {
+    padding: 7px 13px;
+    display: block;
+    font-size: 16px;
+}
+
+span#ABU-select {
+    /* padding: 12px; */
+    border: 1px solid #333;
+    border-radius: 8px;
+}
+.sidebar {
+    padding: 0 12px;
+}
+.sidebar .fm .fm__item .fm__sub li a {
+    padding: 4px 0px;
+    display: block;
+    font-size: 18px;
+    transition: 0.3s all ease-in;
+}
+
+.sidebar .fm .fm__item .fm__sub li a:hover,
+.sidebar .fm .fm__item .fm__sub li a:focus {
+    color: #333;
+}
+
+.sidebar .fm .fm__item  .fm__header {
+    background: #333;
+    color: #fff;
+    font-weight: bold;
+    padding-left: 16px;
+    padding-top: 8px;
+    padding-bottom: 8px;
+    border-radius: 8px;
+}
+.makaba .cntnt__aside {
+    flex: 0 0 300px;
+    -webkit-flex: 0 0 300px;
+}
+.makaba .cntnt .cntnt__header .header__logo .desktop {
+    border-radius: 16px;
+    display: inline-block;
+    overflow: hidden;
+} 
+.makaba .cntnt .cntnt__header .header__logo .desktop img {
+    height: 100%;
+    width: 100%;
+    object-fit: cover;
+    display: block;
+}
+.makaba .cntnt .header__menu{
+    height: unset;
+    padding: 15px 0px;
+    border-bottom: 1px solid #ad16ad42;
+}
+.makaba .cntnt .header__menu.desktop .header__menuitem {
+    padding: 0 18px;
+    transition: 0.3 all ease-in;
+}
+.makaba .cntnt .header__opts {
+    height: unset;
+    padding: 15px 0px;
+    margin-bottom: 36px;
+}
+.makaba .cntnt .header__opts .header__menuitem.desktop {
+    padding: 0 18px;
+    transition: 0.3 all ease-in;
+}
+.makaba .cntnt .header__newpost .newpost__wrapper .desktop.newpost__label {
+    background: #333;
+    color: #fff;
+    border-radius: 8px;
+    height: 44px;
+    display: inline-flex;
+    align-items: center;
+    padding: 0 20px;
+    transition: 0.3s all ease-in;
+}
+.makaba .cntnt .header__newpost .newpost__wrapper .desktop.newpost__label:hover,
+.makaba .cntnt .header__newpost .newpost__wrapper .desktop.newpost__label:focus {
+    background-color: #ad16ad;
+}
+#SwitchStyles {
+    display: none;
+}

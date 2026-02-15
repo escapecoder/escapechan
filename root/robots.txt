@@ -1,0 +1,9 @@
+User-Agent: ProjectArachnid/FPUM7CCW7B32ARICCB5VBN4J7X2XNRPX
+Allow: *
+
+
+User-agent: *
+Disallow: /b/
+Disallow: /po/
+Disallow: /nsfw/
+

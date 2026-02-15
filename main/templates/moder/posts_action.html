@@ -1,0 +1,204 @@
+{{define "base"}}
+<!doctype html>
+<html lang="ru" data-bs-theme="auto">
+	<head>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		<meta name="description" content="">
+		<title>Модерация</title>
+		<link id="favicon" rel="shortcut icon" href="/favicon.ico">
+		<link href="/static/css/bootstrap.min.css" rel="stylesheet">
+		<link rel="stylesheet" href="https://maxst.icons8.com/vue-static/landings/line-awesome/line-awesome/1.3.0/css/line-awesome.min.css">
+		<meta name="theme-color" content="#712cf9">
+		<link href="/static/css/moder.css" rel="stylesheet">
+		<script src="/static/js/jquery.js"></script>
+		<script src="/static/js/color-modes.js"></script>
+	</head>
+	<body style="padding: 20px;" onload="resizeModModal();">
+		<form action="/moder/posts/action" onsubmit="processPostsAction(); return false;" method="POST" id="posts-action-form">
+			<input type="hidden" name="ids" value="{{ html .SelectedPostIds }}">
+			<input type="hidden" name="action" value="{{ html .CurrentPostsAction }}">
+			<div class="row">
+				<div class="col-8"><h5>
+				{{ if eq .CurrentPostsAction "endless" }}
+				Включить бесконечный тред
+				{{ else if eq .CurrentPostsAction "finite" }}
+				Отменить бесконечный тред
+				{{ else if eq .CurrentPostsAction "move" }}
+				Перенести тред
+				{{ else if eq .CurrentPostsAction "close" }}
+				Закрыть тред
+				{{ else if eq .CurrentPostsAction "open" }}
+				Открыть тред
+				{{ else if eq .CurrentPostsAction "archive" }}
+				Заархивировать тред
+				{{ else if eq .CurrentPostsAction "unarchive" }}
+				Разархивировать тред
+				{{ else if eq .CurrentPostsAction "pin" }}
+				Закрепить тред
+				{{ else if eq .CurrentPostsAction "unpin" }}
+				Открепить тред
+				{{ else if eq .CurrentPostsAction "restore" }}
+				Восстановить пост
+				{{ else if eq .CurrentPostsAction "delete" }}
+				Удалить пост
+				{{ else if eq .CurrentPostsAction "delete_and_ban" }}
+				Удалить и забанить
+				{{ else if eq .CurrentPostsAction "ban" }}
+				Забанить
+				{{ else if eq .CurrentPostsAction "note" }}
+				Оставить примечание
+				{{ end }}
+				</h5></div>
+				<div class="col-4" style="text-align:right;"><button type="button" class="btn-close" onclick="window.parent.closePostsActionModal();"></button></div>
+			</div>
+			<hr style="margin: 10px -20px 20px;">
+			{{ if eq .HasOtherModers 1 }}
+			<div class="alert alert-danger">Некоторые посты оставлены модераторами вашего или более старшего уровня.</div>
+			{{ else if eq .HasDifferentBoards 1 }}
+			<div class="alert alert-danger">Нельзя за один раз обработать посты с разных досок. Выберите посты, находящиеся на одной доске.</div>
+			{{ else if eq .HasUnavailablePosts 1 }}
+			<div class="alert alert-danger">Некоторые посты не существуют, уже удалены, архивированы или недоступны вам.</div>
+			{{ else }}
+			{{ if or (eq .CurrentPostsAction "delete_and_ban") (eq .CurrentPostsAction "delete") }}
+			{{ if gt .PostsToAct 1 }}
+			<div class="mb-1">Выбрано постов к удалению: <b>{{ .PostsToAct }}</b></div>
+			{{ end }}
+			{{ end }}
+			{{ if or (eq .CurrentPostsAction "delete_and_ban") (eq .CurrentPostsAction "ban") }}
+			{{ if gt .PostersToBan 1 }}
+			<div class="mb-1">Будет забанено постеров: <b>{{ .PostersToBan }}</b></div>
+			{{ end }}
+			{{ end }}
+			{{ if eq .CurrentPostsAction "note" }}
+			<label class="form-label">Текст примечания (будет виден всем):</label>
+			<input type="text" name="mod_note" class="form-control" value="" maxlength="250" style="width:100%;">
+			{{ end }}
+			{{ if eq .CurrentPostsAction "pin2" }}
+			<label class="form-label">Индекс закрепления:</label>
+			<input type="number" name="pin_index" class="form-control form-control-sm" value="1" style="width:70px;">
+			{{ end }}
+			{{ if eq .CurrentPostsAction "endless" }}
+			<label class="form-label">Сколько последних постов в треде показывать:</label>
+			<input type="number" name="limit" class="form-control form-control-sm" value="1000" style="width:70px;">
+			{{ end }}
+			{{ if eq .CurrentPostsAction "finite" }}
+			Вы уверены?
+			{{ end }}
+			{{ if eq .CurrentPostsAction "pin" }}
+			Вы уверены?
+			{{ end }}
+			{{ if eq .CurrentPostsAction "unpin" }}
+			Вы уверены?
+			{{ end }}
+			{{ if eq .CurrentPostsAction "move" }}
+			<label class="form-label">Укажите новую доску:</label>
+			<select name="newBoard" class="form-select form-select-sm">
+				<option value="">-</option>
+				{{ range $board := .Boards }}
+				<option value="{{ html $board.ID }}">/{{ html $board.ID }}/ - {{ html $board.Name }}</option>
+				{{ end }}
+			</select>
+			{{ end }}
+			{{ if eq .CurrentPostsAction "close" }}
+			Вы уверены?
+			{{ end }}
+			{{ if eq .CurrentPostsAction "open" }}
+			Вы уверены?
+			{{ end }}
+			{{ if eq .CurrentPostsAction "archive" }}
+			Вы уверены?
+			{{ end }}
+			{{ if eq .CurrentPostsAction "unarchive" }}
+			Вы уверены?
+			{{ end }}
+			{{ if eq .CurrentPostsAction "restore" }}
+			Вы уверены?
+			{{ end }}
+			{{ if or (eq .CurrentPostsAction "delete_and_ban") (eq .CurrentPostsAction "ban")  (eq .CurrentPostsAction "delete") }}
+			<div id="ban-reason-selecter">
+				<label class="form-label">Выберите причину{{ if ge .CurrentModer.Level 3 }} или <a href="javascript:void(0);" onclick="$('#ban-reason-selecter').html('<label class=\'form-label\'>Напишите причину удаления:</label><input type=\'text\' name=\'reason\' class=\'form-control\' value=\'\' maxlength=\'250\' style=\'width:100%;\'>'); $('input[name=reason]').focus();">напишите свою</a>{{ end }}:</label>
+				<select name="reason" class="form-select form-select-sm" size="8">
+					{{ range $banReason := .BanReasons }}
+					<option value="{{ html $banReason }}">{{ html $banReason }}</option>
+					{{ end }}
+				</select>
+			</div>
+			{{ end }}
+			{{ if or (eq .CurrentPostsAction "delete_and_ban") (eq .CurrentPostsAction "ban") }}
+			<div class="mt-2">
+				<label class="form-label">Тип бана:</label>
+				<div class="row">
+					<div class="col-6">
+						<span class="form-check">
+							<input type="radio" class="form-check-input" value="full" name="ban_type" id="ban_full" checked>
+							<label class="form-check-label" for="ban_full">Запрет постинга</label>
+						</span>
+					</div>
+					<div class="col-6">
+						<span class="form-check">
+							<input type="radio" class="form-check-input" value="autohide" name="ban_type" id="ban_autohide">
+							<label class="form-check-label" for="ban_autohide">Автоскрытие постов</label>
+						</span>
+					</div>
+				</div>
+			</div>
+			<div class="row mt-2">
+				{{ if ge .CurrentModer.Level 2 }}
+				<div class="col-6">
+					<label class="form-label">IP-адрес или подсеть:</label>
+					<select name="ip_or_subnet" class="form-select form-select-sm">
+						<option value="ip">Точный IP-адрес</option>
+						<option value="subnet1">Последний октет подсети (255.255.255.xxx)</option>
+						<option value="subnet2">Последние 2 октета подсети (255.255.xxx.xxx)</option>
+					</select>
+				</div>
+				{{ end }}
+				<div class="col-6">
+					<label class="form-label">Срок бана:</label>
+					<select name="end" class="form-select form-select-sm">
+						<option value="3h">3 часа</option>
+						<option value="12h">12 часов</option>
+						<option value="1d">1 сутки</option>
+						<option value="3d">3 суток</option>
+						<option value="7d">7 суток</option>
+						<option value="30d">30 суток</option>
+						<option value="inf">Бессрочно</option>
+					</select>
+				</div>
+			</div>
+			<div class="mt-2">
+				<span class="form-check">
+					<input type="checkbox" class="form-check-input" value="1" name="anywhere" id="anywhere">
+					<label class="form-check-label" for="anywhere">Забанить на всех досках (только для крайних случаев)</label>
+				</span>
+			</div>
+			{{ end }}
+			{{ if ge .CurrentModer.Level 2 }}
+			{{ if or (eq .CurrentPostsAction "delete_and_ban") (eq .CurrentPostsAction "delete") }}
+			<div class="mt-2">
+				<span class="form-check">
+					<input type="checkbox" class="form-check-input" value="1" name="del_all" id="delall" onclick="return confirm('Вы уверены, что хотите удалить все посты от этого постера?');">
+					<label class="form-check-label" for="delall">Удалить всё от этого постера</label>
+				</span>
+			</div>
+			{{ end }}
+			{{ end }}
+			{{ if or (eq .CurrentPostsAction "delete_and_ban") (eq .CurrentPostsAction "ban") }}
+			<div class="mt-2">
+				<span class="form-check">
+					<input type="checkbox" class="form-check-input" value="1" name="banpass" id="banpass" onclick="return confirm('Вы уверены, что хотите забанить пасскоды постеров?');">
+					<label class="form-check-label" for="banpass">Забанить пасскод (если есть)</label>
+				</span>
+			</div>
+			{{ end }}
+			<hr style="margin: 20px -20px 20px;">
+			<button type="submit" class="btn {{ if or (eq .CurrentPostsAction "delete_and_ban") (eq .CurrentPostsAction "ban")  (eq .CurrentPostsAction "delete") }}btn-danger{{ else }}btn-primary{{ end }}">Подтвердить выполнение</button>
+			<button type="button" class="btn btn-secondary" onclick="window.parent.closePostsActionModal();">Отмена</button>
+			{{ end }}
+		</form>
+		<script src="/static/js/bootstrap.bundle.js"></script>
+		<script src="/static/js/moder.js"></script>
+	</body>
+</html>
+{{ end }}

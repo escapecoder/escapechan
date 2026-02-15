@@ -1,0 +1,147 @@
+			{{ template "top" . }}
+			{{define "base"}}
+			<div class="bg-body-tertiary p-4 rounded">
+				<div class="row">
+					<div class="col-12">
+						<h1 class="mb-3">Конфигурация сайта</h1>
+					</div>
+				</div>
+				<form action="/moder/config/save" onsubmit="saveEntity(); return false;" method="POST" style="max-width:700px;" id="entity-form">
+					<div class="mb-3">
+						<label class="form-label">Домен для опасных досок:</label>
+						<input type="text" name="no_rkn_domain" class="form-control" value="{{ html .Config.NoRknDomain }}">
+					</div>
+					<input type="hidden" name="menu_sections" id="menu-sections-input" value="{{ html .Config.MenuSections }}">
+					<input type="hidden" name="danger-menu_sections" id="danger_menu-sections-input" value="{{ html .Config.DangerMenuSections }}">
+					<input type="hidden" name="spamlist" id="spamlist-input" value="{{ html .Config.Spamlist }}">
+					<div class="mb-3">
+						<span class="form-check">
+							<input type="checkbox" class="form-check-input" value="1" name="disable_files_displaying" id="disable_files_displaying"{{ if eq .Config.DisableFilesDisplaying 1 }} checked{{ end }}>
+							<label class="form-check-label" for="disable_files_displaying">Отключить отображение файлов <span style="color:#777777;">при изменении следует <a href="/moder/service" target="_blank">пересобрать кэш тредов</a></span></label>
+						</span>
+					</div>
+					<div class="mb-3">
+						<span class="form-check">
+							<input type="checkbox" class="form-check-input" value="1" name="disable_files_displaying_for_readonly" id="disable_files_displaying_for_readonly"{{ if eq .Config.DisableFilesDisplayingForReadonly 1 }} checked{{ end }}>
+							<label class="form-check-label" for="disable_files_displaying_for_readonly">Отключить отображение файлов только для readonly <span style="color:#777777;">нивелирует предыдущий пункт</span></label>
+						</span>
+					</div>
+					<div class="mb-3">
+						<span class="form-check">
+							<input type="checkbox" class="form-check-input" value="1" name="disable_files_uploading" id="disable_files_uploading"{{ if eq .Config.DisableFilesUploading 1 }} checked{{ end }}>
+							<label class="form-check-label" for="disable_files_uploading">Отключить загрузку файлов и разрешить создание тредов без картинок</label>
+						</span>
+					</div>
+					<div class="mb-3">
+						<label class="form-label">Разделы меню и ссылки:</label>
+						<div id="menu-sections" style="max-width:500px;">
+							<div id="menu-section-template" class="d-none">
+								<div class="menu-section-wrapper">
+									<div class="row mb-2">
+										<div class="col-1"><i class="la la-ellipsis-v" style="font-size:26px;padding-top:6px;cursor:move;"></i></div>
+										<div class="col-8">
+											<input type="text" class="form-control menu-section-name" placeholder="Название раздела меню" onkeyup="buildMenuSectionsJson();" maxlength="100">
+										</div>
+										<div class="col-2 d-grid gap-2">
+											<button type="button" class="btn btn-primary" onclick="addMenuLink(this, false);"><i class="las la-plus"></i></button>
+										</div>
+										<div class="col-1 d-grid gap-2">
+											<button type="button" class="btn btn-danger" onclick="removeMenuSection(this);"><i class="las la-trash"></i></button>
+										</div>
+									</div>
+									<div class="menu-section-links nested-sortable"></div>
+								</div>
+							</div>
+							<div id="menu-link-template" class="d-none">
+								<div class="row mb-2">
+									<div class="col-1 d-grid gap-2"></div>
+									<div class="col-1"><i class="la la-ellipsis-v" style="font-size:26px;padding-top:6px;cursor:move;"></i></div>
+									<div class="col-4">
+										<input type="text" class="form-control menu-link-label" placeholder="Лейбл" onkeyup="buildMenuSectionsJson();" maxlength="100">
+									</div>
+									<div class="col-2">
+										<input type="text" class="form-control menu-link-url" placeholder="URL" onkeyup="buildMenuSectionsJson();" maxlength="1024">
+									</div>
+									<div class="col-3">
+										<select size="1" class="form-control menu-link-danger" onchange="buildMenuSectionsJson();">
+											<option value="0">Безопасная</option>
+											<option value="1">Опасная</option>
+										</select>
+									</div>
+									<div class="col-1 d-grid gap-2">
+										<button type="button" class="btn btn-danger" onclick="removeMenuLink(this);"><i class="las la-trash"></i></button>
+									</div>
+								</div>
+							</div>
+							<div id="menu-sections-list" class="nested-sortable"></div>
+							<button type="button" class="btn btn-secondary mb-2" onclick="addMenuSection(false);">Добавить раздел меню</button>
+						</div>
+					</div>
+					<input type="hidden" name="ban_reasons" id="ban-reasons-input" value="{{ html .Config.BanReasons }}">
+					<div class="mb-3">
+						<label class="form-label">Общие причины банов и удалений (доступны на всех досках):</label>
+						<div id="ban-reasons" style="max-width:500px;">
+							<div id="ban-reason-template" class="d-none">
+								<div class="row mb-2">
+									<div class="col-11">
+										<input type="text" class="form-control" placeholder="Причина бана или удаления" onkeyup="buildBanReasonsJson();" maxlength="100">
+									</div>
+									<div class="col-1 d-grid gap-2">
+										<button type="button" class="btn btn-danger" onclick="removeBanReason(this);"><i class="las la-trash"></i></button>
+									</div>
+								</div>
+							</div>
+							<div id="ban-reasons-list"></div>
+							<button type="button" class="btn btn-secondary mb-2" onclick="addBanReason('');">Добавить</button>
+						</div>
+					</div>
+					<div class="mb-3">
+						<label class="form-label">Глобальный спамлист (работает на всех досках):</label>
+						<div id="sl" style="max-width:800px;">
+							<div id="spamlist-template" class="d-none">
+								<div class="row mb-2">
+									<div class="col-6">
+										<input type="text" class="form-control" placeholder="Строка" onkeyup="buildSpamlistJson();" maxlength="100">
+									</div>
+									<div class="col-5">
+										<select size="1" class="form-control" onchange="buildSpamlistJson();">
+											<option value="sequence">Последовательность символов</option>
+											<option value="prefix">Корень слова (одинаковый для всех склонений)</option>
+											<option value="word">Целое слово в той форме, как оно указано</option>
+										</select>
+									</div>
+									<div class="col-1 d-grid gap-2">
+										<button type="button" class="btn btn-danger" onclick="removeSpamlistWord(this);"><i class="las la-trash"></i></button>
+									</div>
+								</div>
+							</div>
+							<div id="spamlist"></div>
+							<button type="button" class="btn btn-secondary mb-2" onclick="addSpamlistWord('', 'sequence');">Добавить</button>
+						</div>
+					</div>
+					<div class="mb-3">
+						<label class="form-label">Информация для размещения под формой постинга:</label>
+						<textarea name="postform_annotation" class="form-control">{{ html .Config.PostformAnnotation }}</textarea>
+						<div class="form-text">Используйте Shift+Enter для переноса строк без параграфов.</div>
+					</div>
+					<div class="mb-3">
+						<label class="form-label">Информация для размещения внизу сайта:</label>
+						<textarea name="footer_annotation" class="form-control">{{ html .Config.FooterAnnotation }}</textarea>
+						<div class="form-text">Используйте Shift+Enter для переноса строк без параграфов.</div>
+					</div>
+					<button type="submit" class="btn btn-primary btn-lg mt-4">Сохранить</button>
+				</form>
+			</div>
+			<script>
+			var moderFormBanReasons = {{ .Config.BanReasons }};
+			var moderFormMenuSections = {{ .Config.DangerMenuSections }};
+			var moderFormSpamlist = {{ .Config.Spamlist }};
+			$(function() {
+				initBanReasons();
+				initMenuSections();
+				initSpamlist();
+				$('textarea[name=postform_annotation], textarea[name=footer_annotation]').summernote({height:150});
+			});
+			</script>
+			{{end}}
+			{{ template "bottom" . }}

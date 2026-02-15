@@ -1,0 +1,76 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html lang="ru">
+	<head>
+		<title>Поиск - {{ .Board.Name }}</title>
+		<meta content="text/html; charset=utf-8" http-equiv="Content-Type" />
+		<meta content="initial-scale=1" name="viewport" />
+		<link href="/static/css/errorpage.css" type="text/css" rel="stylesheet">
+		<link rel="preconnect" href="https://fonts.googleapis.com">
+		<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+		<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@200..800&family=Roboto:ital,wght@0,100;0,300;0,400;0,500;0,700;0,900;1,100;1,300;1,400;1,500;1,700;1,900&display=swap" rel="stylesheet">
+	</head>
+	<body>
+		<header class="header">
+			<img src="/static/img/logo.png" height="110">
+		</header>
+		<section class="data">
+			{{if ne .Error.Code 0}}
+			<div style="text-align: center;">
+				<p style="font-size: 1.5em;">{{ .Error.Message }}</p>
+				<br>
+				<br>
+				<img src="/static/img/error.png" width="350px">
+			</div>
+			{{ else if not .Posts}}
+			<div style="text-align: center;">
+				<p style="font-size: 1.5em;">Ничего не найдено!</p>
+				<br>
+				<br>
+				<img src="/static/img/stub.png" width="350px">
+			</div>
+			{{ else }}
+				{{ range $post := .Posts }}
+				<div id="post-{{ $post.Num }}" class="box">
+					<div class="box__data" id="post-body-{{ $post.Num }}" data-num="{{ $post.Num }}">
+						<div class="post-details" id="post-details-{{ $post.Num }}">
+							{{if ne $post.Subject ""}}
+							<span class="post-title">{{ $post.Subject }}</span>
+							{{ end }}
+							<span class="ananimas">{{ $post.Name }}</span>
+							{{if eq $post.Op 1}}
+							<span class="ophui"># OP</span>
+							{{ end }}
+							<span class="posttime-reflink">
+								<span class="posttime">{{ $post.Date }}&nbsp;</span>
+								<span class="reflink">
+								Пост: <a href="/{{ $post.Board }}/res/{{if eq $post.Parent 0}}{{ $post.Num }}{{ else }}{{ $post.Parent }}{{ end }}.html#{{ $post.Num }}" class="postbtn-reply-href" name="{{ $post.Num }}">№{{ $post.Num }}</a>
+								</span>
+								<span class="reflink">
+								Тред: <a href="/{{ $post.Board }}/res/{{if eq $post.Parent 0}}{{ $post.Num }}{{ else }}{{ $post.Parent }}{{ end }}.html" class="postbtn-reply-href" name="{{ $post.Num }}">№{{if eq $post.Parent 0}}{{ $post.Num }}{{ else }}{{ $post.Parent }}{{ end }}</a>
+								</span>
+							</span>
+							<br class="turnmeoff">
+						</div>
+						<blockquote id="m{{ $post.Num }}" class="post-message">
+								<div class="comment-data">{{$post.CommentParsed}}</div>
+							
+								{{if eq $.Board.EnableReactions 1}}
+								<div class="post__reactions_wrapper{{if gt $post.ReactionsCount 0}} has_reactions{{ end }}" id="reactions-{{ $post.Num }}" data-num="{{ $post.Num }}">
+									{{ range $reaction := $post.Reactions }}
+										{{if gt $reaction.Count 0}}
+										<div class="post__reactions_button{{if gt $reaction.Count 0}} has_reactions{{ end }}">
+											<img src="/static/img/reactions/{{ $reaction.Icon }}?v=8">
+											<span>{{ $reaction.Count }}</span>
+										</div>
+										{{ end }}
+									{{ end }}
+								</div>
+								{{ end }}
+						</blockquote>
+					</div>
+				</div>
+				{{ end }}
+			{{ end }}
+		</section>
+	</body>
+</html>

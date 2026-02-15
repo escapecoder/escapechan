@@ -1,0 +1,37 @@
+			{{ template "top" . }}
+			{{define "base"}}
+			<div class="bg-body-tertiary p-4 rounded">
+				<div class="row">
+					<div class="col-6">
+						<h1 class="mb-3">{{ if eq .IsCreate 1 }}Создание статьи{{ else }}Редактирование статьи{{ end }}</h1>
+					</div>
+					<div class="col-6 text-end">
+						<a href="/moder/articles" class="btn btn-secondary mt-2">К списку статей</a>
+					</div>
+				</div>
+				<form action="/moder/articles/save" onsubmit="saveEntity(); return false;" method="POST" style="max-width:700px;" id="entity-form">
+					<input type="hidden" name="create" value="{{ .IsCreate }}">
+					<input type="hidden" name="id" value="{{ html .Article.ID }}">
+					<div class="mb-3">
+						<label class="form-label">Название статьи:</label>
+						<input type="text" name="title" class="form-control" value="{{ html .Article.Title }}">
+						<div class="form-text">Будет отображаться вверху статьи и во вкладке браузера.</div>
+					</div>
+					<div class="mb-3">
+						<label class="form-label">URL статьи:</label>
+						<input type="text" name="slug" class="form-control" value="{{ html .Article.Slug }}">
+					</div>
+					<div class="mb-3">
+						<label class="form-label">Текст статьи:</label>
+						<textarea name="text" class="form-control">{{ html .Article.Text }}</textarea>
+					</div>
+					<button type="submit" class="btn btn-primary btn-lg mt-4">Сохранить</button>
+				</form>
+			</div>
+			<script>
+			$(function() {
+				$('textarea[name=text]').summernote({height:150});
+			});
+			</script>
+			{{end}}
+			{{ template "bottom" . }}

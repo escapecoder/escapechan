@@ -1,0 +1,243 @@
+			{{ template "top" . }}
+			{{define "base"}}
+			<div class="bg-body-tertiary p-4 rounded">
+				<div class="row">
+					<div class="col-12">
+						<h1 class="mb-3">Пост №<a href="/{{ .Post.Board }}/res/{{ if gt .Post.Parent 0 }}{{ .Post.Parent }}{{ else }}{{ .Post.Num }}{{ end }}.html#{{ .Post.Num }}" target="_blank" class="link-underline link-underline-opacity-10">{{ .Post.Num }}</a> на доске /<a href="/{{ .Post.Board }}/" target="_blank" class="link-underline link-underline-opacity-10">{{ .Post.Board }}</a>/</h1>
+					</div>
+				</div>
+				<div class="row mb-1">
+					<div class="col-2"><b>Тип поста:</b></div>
+					<div class="col-10">{{ if gt .Post.Parent 0 }}Ответ на <a href="/moder/posts/single?board={{ .Post.Board }}&num={{ .Post.Parent }}" target="_blank" class="link-underline link-underline-opacity-10">тред</a>{{ else }}Тред{{ end }}</div>
+				</div>
+				<div class="row mb-1">
+					<div class="col-2"><b>Дата отправки по МСК:</b></div>
+					<div class="col-10">{{ .Post.Date }}</div>
+				</div>
+				{{ if ge .CurrentModer.Level 1 }}
+				<div class="row mb-1">
+					<div class="col-2"><b>IP-адрес:</b></div>
+					<div class="col-10">{{ .Post.Ip }}</div>
+				</div>
+				{{ end }}
+				<div class="row mb-1">
+					<div class="col-2"><b>География:</b></div>
+					<div class="col-10">{{ .Post.IpCityName }}, {{ .Post.IpCountryName }}</div>
+				</div>
+				<div class="row mb-1">
+					<div class="col-2"><b>Текст поста:</b></div>
+					<div class="col-10">{{ .Post.CommentParsed }}</div>
+				</div>
+				<div class="row mb-1">
+					<div class="col-2"><b>Файлы:</b></div>
+					<div class="col-10">
+						{{ if gt .Post.FilesCount 0 }}
+							{{ range $file := .Post.FilesParsed }}
+								<div class="post-file-wrapper">
+								<div class="mb-0"><a target="_blank" href="{{ $file.Path }}" class="link-underline link-underline-opacity-10">{{ $file.DisplayName }}</a></div>
+								<div class="mb-1 text-secondary small">{{ $file.Size }}Кб, {{ $file.Width }}x{{ $file.Height }}{{ if eq $file.Type 10 }} ({{ $file.Duration }}){{ end }}</div>
+								<a target="_blank" href="{{ $file.Path }}">
+									<img class="post-file{{ if eq $file.Type 10 }} post-video{{ end }}" src="{{ $file.Thumbnail }}" width="{{ $file.ThumbnailWidth }}" height="{{ $file.ThumbnailHeight }}" onerror="$(this).hide();">
+								</a>
+								</div>
+							{{ end }}
+						{{ else }}
+							&mdash;
+						{{ end }}
+					</div>
+				</div>
+				<div class="row mb-1">
+					<div class="col-2"><b>Репорты:</b></div>
+					<div class="col-10">{{ .Post.Reports }}</div>
+				</div>
+				{{ if and (eq .Post.Deleted 0) (eq .Post.Archived 0) }}
+				<hr>
+				<div>
+					<button type="button" class="btn btn-sm btn-outline-danger mb-1 me-1" onclick="openPostsActionModal('delete', '{{ .Post.Board }}:{{ .Post.Num }}');">Удалить пост</button>
+					{{ if ge .CurrentModer.Level 1 }}
+					<button type="button" class="btn btn-sm btn-outline-danger mb-1 me-1" onclick="openPostsActionModal('ban', '{{ .Post.Board }}:{{ .Post.Num }}');">Забанить постера</button>
+					<button type="button" class="btn btn-sm btn-outline-danger mb-1 me-1" onclick="openPostsActionModal('delete_and_ban', '{{ .Post.Board }}:{{ .Post.Num }}');">Удалить и забанить</button>
+					{{ end }}
+				</div>
+				{{ end }}
+				{{ if and (gt .Post.Deleted 0) (eq .Post.DeletedByThreadDeletion 0) (eq .Post.DeletedByEndlessExcess 0) (eq .Post.Archived 0) }}
+				<hr>
+				<div>
+					<button type="button" class="btn btn-sm btn-outline-success mb-1 me-1" onclick="openPostsActionModal('restore', '{{ .Post.Board }}:{{ .Post.Num }}');">Восстановить пост</button>
+				</div>
+				{{ end }}
+			</div>
+            {{ if ge .CurrentModer.Level 3 }}
+            {{ if eq .Post.Parent 0 }}
+            <div class="bg-body-tertiary p-4 rounded mt-3">
+                <form action="/moder/posts/updateMenu" onsubmit="savePostMenu(); return false;" method="POST" style="max-width:700px;" id="post-menu-form">
+                    <input type="hidden" name="board" value="{{ html .Post.Board }}">
+                    <input type="hidden" name="num" value="{{ html .Post.Num }}">
+                    <input type="hidden" name="menu" id="post-menu-input" value="{{ html .Post.Menu }}">
+                    <div class="row">
+                        <div class="col-12">
+                            <h2 class="mb-3">Меню в треде</h2>
+                        </div>
+                    </div>
+                    <div class="row mb-1">
+						<div id="menu-sections" style="max-width:700px;">
+							<div id="post-menu-section-template" class="d-none">
+								<div class="menu-section-wrapper">
+									<div class="row mb-2">
+										<div class="col-1"><i class="la la-ellipsis-v" style="font-size:26px;padding-top:6px;cursor:move;"></i></div>
+										<div class="col-8">
+											<input type="text" class="form-control menu-section-name" placeholder="Название раздела меню" onkeyup="buildPostMenuSectionsJson();" maxlength="100">
+										</div>
+										<div class="col-2 d-grid gap-2">
+											<button type="button" class="btn btn-primary" onclick="addPostMenuLink(this, false);"><i class="las la-plus"></i></button>
+										</div>
+										<div class="col-1 d-grid gap-2">
+											<button type="button" class="btn btn-danger" onclick="removePostMenuSection(this);"><i class="las la-trash"></i></button>
+										</div>
+									</div>
+									<div class="menu-section-links nested-sortable"></div>
+								</div>
+							</div>
+							<div id="post-menu-link-template" class="d-none">
+								<div class="row mb-2">
+									<div class="col-1 d-grid gap-2"></div>
+									<div class="col-1"><i class="la la-ellipsis-v" style="font-size:26px;padding-top:6px;cursor:move;"></i></div>
+									<div class="col-4">
+										<input type="text" class="form-control menu-link-label" placeholder="Лейбл" onkeyup="buildPostMenuSectionsJson();" maxlength="100">
+									</div>
+									<div class="col-5">
+										<input type="text" class="form-control menu-link-url" placeholder="URL" onkeyup="buildPostMenuSectionsJson();" maxlength="1024">
+									</div>
+									<div class="col-1 d-grid gap-2">
+										<button type="button" class="btn btn-danger" onclick="removePostMenuLink(this);"><i class="las la-trash"></i></button>
+									</div>
+								</div>
+							</div>
+							<div id="post-menu-sections-list" class="nested-sortable"></div>
+							<button type="button" class="btn btn-secondary mb-2" onclick="addPostMenuSection(false);">Добавить раздел меню</button>
+						</div>
+                    </div>
+                    <button type="submit" class="btn btn-primary mt-2">Сохранить меню</button>
+                </form>
+            </div>
+            <script>
+			var moderFormPostMenuSections = {{ .Post.Menu }};
+            
+            function initPostMenuSections() {
+                if(moderFormPostMenuSections.length > 0) {
+                    moderFormPostMenuSections.forEach(function callback(data, index) {
+                        addPostMenuSection(data);
+                    });
+                }
+            }
+
+            function addPostMenuSection(data) {
+                if(!data) {
+                    data = {"sectionName": "", "links": []};
+                }
+                
+                var menuSectionTemplate = $('#post-menu-section-template').html();
+                
+                $('#post-menu-sections-list').append(menuSectionTemplate);
+                $('#post-menu-sections-list .menu-section-wrapper').last().find('.menu-section-name').val(data.sectionName);
+                
+                var el = $('#post-menu-sections-list .menu-section-wrapper').last();
+                
+                data.links.forEach(function callback(link, index) {
+                    addPostMenuLink(el, link);
+                });
+                
+                buildPostMenuSectionsJson();
+                reInitPostMenuSortable();
+            }
+
+            function removePostMenuSection(element) {
+                $(element).closest('.menu-section-wrapper').remove();
+                
+                buildPostMenuSectionsJson();
+                reInitPostMenuSortable();
+            }
+
+            function addPostMenuLink(element, data) {
+                if(!data) {
+                    data = {"label": "", "url": ""};
+                }
+                
+                var menuLinkTemplate = $('#post-menu-link-template').html();
+                
+                $(element).closest('.menu-section-wrapper').find('.menu-section-links').append(menuLinkTemplate);
+                $(element).closest('.menu-section-wrapper').find('.menu-section-links .row').last().find('.menu-link-label').val(data.label);
+                $(element).closest('.menu-section-wrapper').find('.menu-section-links .row').last().find('.menu-link-url').val(data.url);
+                
+                buildPostMenuSectionsJson();
+                reInitPostMenuSortable();
+            }
+
+            function removePostMenuLink(element) {
+                $(element).closest('.row').remove();
+                
+                buildPostMenuSectionsJson();
+                reInitPostMenuSortable();
+            }
+
+            initializedSortables = [];
+
+            function reInitPostMenuSortable() {
+                initializedSortables.forEach(function callback(s, index) {
+                    s.destroy();
+                });
+                
+                initializedSortables = [];
+                
+                var nestedSortables = [].slice.call(document.querySelectorAll('.nested-sortable'));
+
+                for (var i = 0; i < nestedSortables.length; i++) {
+                    initializedSortables[i] = new Sortable(nestedSortables[i], {
+                        group: 'nested-' + i,
+                        handle: '.la',
+                        animation: 150,
+                        fallbackOnBody: true,
+                        swapThreshold: 0.65,
+                        onEnd: function() {
+                            buildPostMenuSectionsJson();
+                        }
+                    });
+                }
+            }
+
+            function buildPostMenuSectionsJson() {
+                moderFormPostMenuSections = [];
+                
+                $('#post-menu-sections-list .menu-section-wrapper').each(function() {
+                    var el = $(this);
+                    var value = el.find('.menu-section-name').val();
+                    
+                    var links = [];
+                    
+                    el.find('.menu-section-links .row').each(function() {
+                        var el2 = $(this);
+                        var label = el2.find('.menu-link-label').val();
+                        var url = el2.find('.menu-link-url').val();
+                    
+                        links.push({'label':label,'url':url});
+                    });
+                    
+                    if(links.length > 0) {
+                        moderFormPostMenuSections.push({'sectionName':value,'links':links});
+                    }
+                });
+                
+                $('#post-menu-input').val(JSON.stringify(moderFormPostMenuSections));
+            }
+            
+			$(function() {
+				initPostMenuSections();
+			});
+            </script>
+            {{ end }}
+            {{ end }}
+			<dialog id="mod-modal">
+				<iframe src="about:blank" width="500" id="mod-frame" scrolling="no"></iframe>
+			</dialog>
+			{{end}}
+			{{ template "bottom" . }}

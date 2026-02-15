@@ -1,0 +1,115 @@
+			{{ template "top" . }}
+			{{define "base"}}
+			<div class="bg-body-tertiary p-4 rounded">
+				<div class="row">
+					<div class="col-6">
+						<h1 class="mb-3">{{ if eq .IsCreate 1 }}Добавление модератора{{ else }}Редактирование модератора{{ end }}</h1>
+					</div>
+					<div class="col-6 text-end">
+						<a href="/moder/moders" class="btn btn-secondary mt-2">К списку модераторов</a>
+					</div>
+				</div>
+				<form action="/moder/moders/save" onsubmit="saveEntity(); return false;" method="POST" style="max-width:700px;" id="entity-form">
+					<input type="hidden" name="create" value="{{ .IsCreate }}">
+					<input type="hidden" name="id" value="{{ html .Moder.ID }}">
+					<input type="hidden" name="permissions" id="permissions-input" value="{{ html .Moder.Permissions }}">
+					<div class="mb-3">
+						<label class="form-label">Логин:</label>
+						<input type="text" name="login" class="form-control" maxlength="32" value="{{ html .Moder.Login }}">
+					</div>
+					<div class="mb-3">
+						<label class="form-label">Пароль:</label>
+						<input type="text" name="password" class="form-control" maxlength="32" value="{{ if eq .IsCreate 1 }}{{ html .Moder.Password }}{{ end }}" placeholder="{{ if eq .IsCreate 0 }}Оставить как есть{{ end }}" id="password-input">
+						<div class="form-text">Вы можете <a href="javascript:void(0);" class="link-underline link-underline-opacity-10" onclick="$('#password-input').val(Math.random().toString(36).slice(-9).toUpperCase());">сгенерировать случайный пароль</a>.</div>
+					</div>
+					<div class="mb-3">
+						<label class="form-label">Уровень доступа:</label>
+						<div class="form-check">
+							<input class="form-check-input" type="radio" name="level" value="0" id="accessLevelRadio0"{{ if eq .Moder.Level 0 }} checked{{ end }}>
+							<label class="form-check-label" for="accessLevelRadio0">Уровень <b>0</b></label>
+							<div class="form-text text-gray">Удаление постов без бана. Нет доступа к репортам. IP-адреса закодированы. Только личный модлог.</div>
+						</div>
+						<div class="form-check">
+							<input class="form-check-input" type="radio" name="level" value="1" id="accessLevelRadio1"{{ if eq .Moder.Level 1 }} checked{{ end }}>
+							<label class="form-check-label" for="accessLevelRadio1">Уровень <b>1</b></label>
+							<div class="form-text text-success">Удаление постов, баны постеров по IP-адресу, просмотр репортов.</div>
+						</div>
+						<div class="form-check">
+							<input class="form-check-input" type="radio" name="level" value="2" id="accessLevelRadio2"{{ if eq .Moder.Level 2 }} checked{{ end }}>
+							<label class="form-check-label" for="accessLevelRadio2">Уровень <b>2</b></label>
+							<div class="form-text text-primary">Баны постеров по подсети, модлоги коллег по доступным бордам.</div>
+						</div>
+						<div class="form-check">
+							<input class="form-check-input" type="radio" name="level" value="3" id="accessLevelRadio3"{{ if eq .Moder.Level 3 }} checked{{ end }}>
+							<label class="form-check-label" for="accessLevelRadio3">Уровень <b>3</b></label>
+							<div class="form-text text-warning-emphasis">Просмотр и отмена банов, закрепление тредов и управление их бесконечностью.</div>
+						</div>
+						{{ if eq .CurrentModer.Level 5 }}
+						<div class="form-check">
+							<input class="form-check-input" type="radio" name="level" value="4" id="accessLevelRadio4"{{ if eq .Moder.Level 4 }} checked{{ end }}>
+							<label class="form-check-label" for="accessLevelRadio4">Уровень <b>4</b></label>
+							<div class="form-text text-warning-emphasis">Управление модераторами ниже своего уровня. Управление разделами. Глобальный модлог.</div>
+						</div>
+						<div class="form-check">
+							<input class="form-check-input" type="radio" name="level" value="5" id="accessLevelRadio5"{{ if eq .Moder.Level 5 }} checked{{ end }}>
+							<label class="form-check-label" for="accessLevelRadio5">Уровень <b>5</b></label>
+							<div class="form-text text-danger"><b>Доступно всё. Видны настоящие IP-адреса.</b></div>
+						</div>
+						{{ end }}
+					</div>
+					<div class="mb-3">
+						<label class="form-label">Доступные разделы и треды:</label>
+						<div id="permissions" style="max-width:500px;">
+							<div id="permissions-template" class="d-none">
+								<div class="row mb-2">
+									<div class="col-5">
+										<select class="form-select" onchange="buildModerPermissionsJson();">
+											<option value="all">❗❗❗ ВСЕ ДОСКИ ❗❗❗</option>
+											{{ range $board := .Boards }}
+											<option value="{{ $board.ID }}">/{{ $board.ID }}/- {{ $board.Name }}</option>
+											{{ end }}
+										</select>
+									</div>
+									<div class="col-5">
+										<input type="number" class="form-control" placeholder="Номер треда" onkeyup="buildModerPermissionsJson();">
+									</div>
+									<div class="col-2 d-grid gap-2">
+										<button type="button" class="btn btn-danger" onclick="removeModerPermission(this);"><i class="las la-trash"></i></button>
+									</div>
+								</div>
+							</div>
+							<div id="permissions-list"></div>
+							<button type="button" class="btn btn-secondary mb-2" onclick="addModerPermission('all', '');">Добавить</button>
+						</div>
+						<div class="form-text">Если поле &laquo;Номер треда&raquo; не заполнено, то доступ будет ко всему разделу.</div>
+					</div>
+					<div class="mb-3">
+						<label class="form-label">Внутренняя пометка:</label>
+						<textarea name="note" class="form-control">{{ html .Moder.Note }}</textarea>
+						<div class="form-text">Будет отображаться в списке модераторов.</div>
+					</div>
+					<div class="mb-3" style="max-width:200px;display:none;">
+						<label class="form-label">Доступ к IP-адресам и геолокации:</label>
+						<select class="form-select" name="expose_ip">
+							<option value="0"{{ if eq .Moder.ExposeIp 0 }} selected{{ end }}>Запретить</option>
+							<option value="1"{{ if eq .Moder.ExposeIp 1 }} selected{{ end }}>Разрешить</option>
+						</select>
+					</div>
+					<div class="mb-3" style="max-width:200px;">
+						<label class="form-label">Статус:</label>
+						<select class="form-select" name="enabled">
+							<option value="1"{{ if eq .Moder.Enabled 1 }} selected{{ end }}>Активен</option>
+							<option value="0"{{ if eq .Moder.Enabled 0 }} selected{{ end }}>Заблокирован</option>
+						</select>
+					</div>
+					<button type="submit" class="btn btn-primary btn-lg mt-4">Сохранить</button>
+				</form>
+			</div>
+			<script>
+			var moderFormPermissions = {{ .Moder.Permissions }};
+			$(function() {
+				initModerEdit();
+			});
+			</script>
+			{{end}}
+			{{ template "bottom" . }}
