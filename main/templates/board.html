@@ -21,10 +21,6 @@
 				st = JSON.parse(st);
 				window._st = st;
 				const tmp_styles = {
-			        first: '/static/css/themes/first.css',
-			        second: '/static/css/themes/second.css',
-			        third: '/static/css/themes/third.css',
-			        fourth: '/static/css/themes/fourth.css',
 			        classic: false,
 			        classiccentered: '/static/css/themes/classiccentered.css',
 			        classicverdana: '/static/css/themes/classicverdana.css',
@@ -39,7 +35,7 @@
 				var customStyle = st.hasOwnProperty('styling') ? st.styling.style : false;
 				
 				if(!customStyle) {
-					customStyle = 'first';
+					customStyle = 'classic';
 				}
 				
 			    if(customStyle && tmp_styles[customStyle]) {
@@ -824,12 +820,6 @@
 								<span title="{{ index .Lang "board_posting_admin_hint" }}">{{ index .Lang "board_posting_admin" }}</span>
 							</label>
 						</div>
-						<div class="options__box coder-mark-checkbox" style="display:none">
-							<input type="checkbox" value="1" name="coder_mark" id="coder-mark-box_qr" class="coder-mark-box">
-							<label for="coder-mark-box_qr">
-								<span>Coder</span>
-							</label>
-						</div>
 					</div>
 					<div class="postform__raw filer">
 						<input type="file" name="formimages[]" id="formimages" class="filer__input" multiple>
@@ -967,12 +957,6 @@
 					<input type="checkbox" value="1" name="adm_mark" id="adm-mark-box" class="adm-mark-box">
 					<label for="adm-mark-box">
 						<span title="{{ index .Lang "board_posting_admin_hint" }}">{{ index .Lang "board_posting_admin" }}</span>
-					</label>
-				</div>
-				<div class="options__box coder-mark-checkbox" style="display:none">
-					<input type="checkbox" value="1" name="coder_mark" id="coder-mark-box" class="coder-mark-box">
-					<label for="coder-mark-box">
-						<span>Coder</span>
 					</label>
 				</div>
 			</div>

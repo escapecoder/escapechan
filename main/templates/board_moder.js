@@ -175,10 +175,6 @@ $(function() {
 		$('.adm-mark-checkbox').show();
 	}
 	
-	if(moder.id == 1) {
-		$('.coder-mark-checkbox').show();
-	}
-	
 	if(moder.level > 0) {
 		$('.tn').append('<span class="mod_actions" style="display:none;"> | <a href="#" class="mod-action-delete">Удалить выбранное</a> | <a href="#" class="mod-action-ban">Забанить выбранное</a> | <a href="#" class="mod-action-delete_and_ban">Удалить выбранное и забанить</a></span>');
 	} else {
