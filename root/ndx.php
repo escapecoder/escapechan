@@ -1,7 +1,7 @@
 <?php
 ini_set('default_socket_timeout', 3);
 
-$dbconn = new mysqli('127.0.0.1', 'root', 'A@aB123212321a', '3ch');
+$dbconn = new mysqli('127.0.0.1', 'root', 'passsword', 'escapechan');
 
 $res = $dbconn->query("SELECT COUNT(`id`) as `posts_per_hour` FROM `posts` WHERE `timestamp` >= " . (time() - 60 * 60) . ";");
 $row = $res->fetch_assoc();
