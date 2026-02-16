@@ -42,7 +42,9 @@ nohup /home/escapechan/main/backend > /dev/null & echo $!
 
 **11**. После этого запустите микросервис генерации локальных ID постов в пределах досок на борде, иначе посты не будут отправляться:
 
-```nohup /home/escapechan/nums/nums > /dev/null & echo $!```
+```
+nohup /home/escapechan/nums/nums > /dev/null & echo $!
+```
 
 ## Дополнительно
 
