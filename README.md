@@ -1,4 +1,4 @@
-# EscapeChan
+# Escapechan
 
 Движок имиджборды, написанный на Go.
 
