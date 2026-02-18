@@ -72,13 +72,13 @@ func Init() {
 	r.HandleFunc("/api/captcha/slide/id", api.GetSlideBasicCaptData).Methods("GET")
 	r.HandleFunc("/api/captcha/slide/check", api.CheckSlideData).Methods("POST")
 	
-	r.HandleFunc("/api/render/board/{board}/html", api.TestRenderBoardHtml).Methods("GET")
-	r.HandleFunc("/api/render/board/{board}/json", api.TestRenderBoardJson).Methods("GET")
+	//r.HandleFunc("/api/render/board/{board}/html", api.TestRenderBoardHtml).Methods("GET")
+	//r.HandleFunc("/api/render/board/{board}/json", api.TestRenderBoardJson).Methods("GET")
 	
-	r.HandleFunc("/api/render/thread/{board}/{num}/html", api.TestRenderThreadHtml).Methods("GET")
-	r.HandleFunc("/api/render/thread/{board}/{num}/json", api.TestRenderThreadJson).Methods("GET")
+	//r.HandleFunc("/api/render/thread/{board}/{num}/html", api.TestRenderThreadHtml).Methods("GET")
+	//r.HandleFunc("/api/render/thread/{board}/{num}/json", api.TestRenderThreadJson).Methods("GET")
 	
-	r.HandleFunc("/api/render/boards/all", api.RenderAllBoards).Methods("GET")
+	//r.HandleFunc("/api/render/boards/all", api.RenderAllBoards).Methods("GET")
 	
 	r.HandleFunc("/api/mobile/v2/boards", api.MobileBoardsList).Methods("GET")
 	r.HandleFunc("/api/mobile/v2/info/{board}/{thread}", api.MobileThread).Methods("GET")
