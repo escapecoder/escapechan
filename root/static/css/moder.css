@@ -1,0 +1,19 @@
+.post-file-wrapper {
+	max-width: 220px;
+	vertical-align: top;
+	margin: 0 10px 10px 0;
+	display: inline-block;
+}
+
+.post-file {
+	
+}
+
+.post-video {
+	border: 1px dashed black;
+}
+
+#mod-modal {
+	padding: 0;
+	border: 3px solid gray;
+}

@@ -1,0 +1,34 @@
+			{{ template "top" . }}
+			{{define "base"}}
+			<div class="row">
+				<div class="col-6">
+					<h1 class="mb-3">Статьи</h1>
+				</div>
+				<div class="col-6 text-end">
+					<a href="/moder/articles/create" class="btn btn-secondary mt-2">Создать статью</a>
+				</div>
+			</div>
+			{{if not .Articles}}
+			<div class="alert alert-light">На данный момент на сайте нет ни одной статьи.</div>
+			{{ else }}
+			<table class="table align-middle">
+				<thead>
+					<tr>
+						<th scope="col">ID</th>
+						<th scope="col">Название</th>
+						<th scope="col" width="100px">Действия</th>
+					</tr>
+				</thead>
+				<tbody class="table-group-divider">
+					{{ range $article := .Articles }}
+					<tr>
+						<th scope="row">#{{ html $article.ID }}</th>
+						<td><a class="link-underline link-underline-opacity-10" href="/articles/{{ html $article.Slug }}/" target="_blank">{{ html $article.Title }}</a></td>
+						<td><a href="/moder/articles/{{ html $article.ID }}/edit" class="btn btn-outline-secondary btn-sm">Редактировать</a></td>
+					</tr>
+					{{ end }}
+				</tbody>
+			</table>
+			{{end}}
+			{{end}}
+			{{ template "bottom" . }}

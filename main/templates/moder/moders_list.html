@@ -1,0 +1,38 @@
+			{{ template "top" . }}
+			{{define "base"}}
+			<div class="row">
+				<div class="col-6">
+					<h1 class="mb-3">Модераторы</h1>
+				</div>
+				<div class="col-6 text-end">
+					<a href="/moder/moders/create" class="btn btn-secondary mt-2">Добавить модератора</a>
+				</div>
+			</div>
+			{{if not .Moders}}
+			<div class="alert alert-light">На данный момент нет ни одного модератора.</div>
+			{{ else }}
+			<table class="table align-middle">
+				<thead>
+					<tr>
+						<th scope="col">ID</th>
+						<th scope="col">Логин</th>
+						<th scope="col">Уровень</th>
+						<th scope="col">Внутренняя пометка</th>
+						<th scope="col" width="100px">Действия</th>
+					</tr>
+				</thead>
+				<tbody class="table-group-divider">
+					{{ range $moder := .Moders }}
+					<tr>
+						<th scope="row">{{ html $moder.ID }}</th>
+						<td>{{ html $moder.Login }}</td>
+						<td>{{ html $moder.Level }}</td>
+						<td>{{ html $moder.Note }}</td>
+						<td><a href="/moder/moders/{{ html $moder.ID }}/edit" class="btn btn-outline-secondary btn-sm">Редактировать</a></td>
+					</tr>
+					{{ end }}
+				</tbody>
+			</table>
+			{{end}}
+			{{end}}
+			{{ template "bottom" . }}

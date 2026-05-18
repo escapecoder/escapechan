@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Captcha</title>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+	<meta name="viewport" content="initial-scale=1">
+	<!--<script src="https://www.google.com/recaptcha/api.js" async defer></script>-->
+	<style>
+	html, body {
+		width: 100%;
+		height: 100%;
+		margin: 0;
+		padding: 0;
+		background: #EEF2FF;
+		color: #333;
+	}
+	body {
+		align-items: center !important;
+		display: flex !important;
+		font-family: Tahoma, Arial, open sans,sans-serif;
+		font-size: 16px;
+		text-align: center;
+	}
+	button {
+		font-size: 30px;
+		font-weight: bold;
+		padding: 10px;
+		cursor: pointer;
+	}
+	</style>
+</head>
+<body>
+	<div style="flex: 1;">
+		<h1>Одну минуту...</h1>
+		<div style="font-size:16px;margin-bottom:20px;padding: 0 10px;">Нам важно убедиться, что Вы не робот. Пожалуйста, пройдите проверку, нажав на галочку и затем на кнопку &laquo;Вперёд&raquo;.</div>
+		<form action="/verify-captcha" method="POST">
+			<div style="width:303px;margin:0 auto;padding-bottom:25px;">
+				<label style="transform:scale(2);display:block;">
+					<input type="checkbox" name="norobot" value="1">
+					<span>Я не робот</span>
+				</label>
+			</div>
+			<input type="hidden" name="redirect" value="/" id="redirect-input">
+			<button type="submit">Вперёд</button>
+		</form>
+	</div>
+	<script>
+	document.getElementById('redirect-input').value = location.href.split('captcha?return=')[1];
+	</script>
+</body>
+</html>

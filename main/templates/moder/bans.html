@@ -1,0 +1,134 @@
+			{{ template "top" . }}
+			{{define "base"}}
+			<div class="row">
+				<div class="col-12">
+					<h1 class="mb-3">{{ index .Lang "moderation_bans" }}</h1>
+				</div>
+			</div>
+			<div class="mb-3">
+				<form class="row row-cols-lg-auto g-3 align-items-center">
+					<div class="col-12">
+						<label class="visually-hidden" for="idSearchQuery">{{ index .Lang "moderation_bans_search_id" }}</label>
+						<div class="input-group">
+							<input type="text" class="form-control" id="idSearchQuery" placeholder="{{ index .Lang "moderation_bans_search_id" }}">
+						</div>
+					</div>
+					<div class="col-12">
+						<label class="visually-hidden" for="textSearchQuery">{{ index .Lang "moderation_bans_search_query" }}</label>
+						<div class="input-group">
+							<input type="text" class="form-control" id="textSearchQuery" placeholder="{{ index .Lang "moderation_bans_search_query" }}">
+						</div>
+					</div>
+					<div class="col-12">
+						<label class="visually-hidden" for="ipSearchQuery">{{ index .Lang "moderation_bans_search_ip" }}</label>
+						<div class="input-group">
+							<input type="text" class="form-control" id="ipSearchQuery" placeholder="{{ index .Lang "moderation_bans_search_ip" }}">
+						</div>
+					</div>
+					<div class="col-12">
+						<div class="text-secondary">{{ index .Lang "moderation_bans_search_hint" }}</div>
+					</div>
+				</form>
+			</div>
+			<div class="mb-3">
+				<table id="bans-table" class="display" style="width:100%">
+					<thead>
+						<tr>
+							<th nowrap width="190">#</th>
+							<th nowrap width="190">{{ index .Lang "moderation_bans_table_ip" }}</th>
+							<th>{{ index .Lang "moderation_bans_table_reason" }}</th>
+							<th width="100">{{ index .Lang "moderation_bans_table_moder" }}</th>
+							<th width="190">{{ index .Lang "moderation_bans_table_date" }}</th>
+							<th width="190">{{ index .Lang "moderation_bans_table_expires" }}</th>
+							<th width="170">{{ index .Lang "moderation_bans_table_actions" }}</th>
+						</tr>
+					</thead>
+					<tfoot>
+						<tr>
+							<th nowrap width="190">#</th>
+							<th nowrap width="190">{{ index .Lang "moderation_bans_table_ip" }}</th>
+							<th>{{ index .Lang "moderation_bans_table_reason" }}</th>
+							<th width="100">{{ index .Lang "moderation_bans_table_moder" }}</th>
+							<th width="190">{{ index .Lang "moderation_bans_table_date" }}</th>
+							<th width="190">{{ index .Lang "moderation_bans_table_expires" }}</th>
+							<th width="170">{{ index .Lang "moderation_bans_table_actions" }}</th>
+						</tr>
+					</tfoot>
+				</table>
+			</div>
+			<script>
+			function cancelBan(id) {
+				if(confirm('{{ index .Lang "moderation_bans_table_cancel_are_you_sure" }}')) {
+					$.post('/moder/bans/cancel', 'id=' + id, function() {
+						$('#ban-status-' + id).html('<span class="badge text-bg-success">{{ index .Lang "moderation_bans_table_canceled" }}</span>');
+						$('#cancel-ban-button-' + id).remove();
+					});
+				}
+			}
+			
+			$(function() {
+				$('#idSearchQuery, #textSearchQuery, #ipSearchQuery').keyup(delay(function(e) {
+					$('#bans-table').DataTable().page('first').draw('page');
+				}, 500));
+				
+				$('#bans-table').on('preXhr.dt', function (e, settings, data) {
+					data.id = $('#idSearchQuery').val();
+					data.query = $('#textSearchQuery').val();
+					data.ip = $('#ipSearchQuery').val();
+				}).dataTable({
+					pageLength: 50,
+					ordering: false,
+					serverSide: true,
+					searching: false,
+					ajax: '/moder/bans/search',
+					language: {
+						url: '/static/js/datatables-ru-bans.json',
+					},
+					columns: [
+						{ data: null, render: function ( data, type, row ) {
+							var html = '';
+							
+							if(row.canceled > 0) {
+								html += '<div id="ban-status-' + row.id + '"><span class="badge text-bg-success">{{ index .Lang "moderation_bans_table_canceled" }}</span></div>';
+							} else if(row.ended > 0) {
+								html += '<div id="ban-status-' + row.id + '"><span class="badge text-bg-success">{{ index .Lang "moderation_bans_table_expired" }}</span></div>';
+							} else {
+								html += '<div id="ban-status-' + row.id + '"><span class="badge text-bg-warning">{{ index .Lang "moderation_bans_table_active" }}</span></div>';
+							}
+							
+							html += '<div>Бан: ' + row.id + '</div>';
+							
+							html += '<div>Доска: ' + (row.board == 'all' ? '{{ index .Lang "moderation_bans_table_all_boards" }}' : '/' + row.board + '/') + '</div>';
+							
+							return html;
+						} },
+						{ data: null, render: function ( data, type, row ) {
+							return row.ip_subnet + '#' + row.type;
+						} },
+						{ data: null, render: function ( data, type, row ) {
+							return row.reason;
+						} },
+						{ data: null, render: function ( data, type, row ) {
+							return row.moder_name;
+						} },
+						{ data: null, render: function ( data, type, row ) {
+							return row.date;
+						} },
+						{ data: null, render: function ( data, type, row ) {
+							return row.date_end;
+						} },
+						{ data: null, render: function ( data, type, row ) {
+							var html = '';
+							
+							if(row.canceled == 0 && row.ended == 0) {
+								html += '<button type="button" class="btn btn-sm btn-outline-success mb-1 me-1" id="cancel-ban-button-' + row.id + '" onclick="cancelBan(\'' + row.id + '\');">{{ index .Lang "moderation_bans_table_cancel" }}</button>';
+							}
+							
+							return html;
+						} },
+					]
+				});
+			});
+			</script>
+			{{end}}
+			{{ template "bottom" . }}

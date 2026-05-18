@@ -1,0 +1,23 @@
+html:not(.nightmode){
+    --theme_default_bg: #d7ecff;
+    --theme_default_postbg: #c6e8ff;
+    --theme_default_postbghighlight: #d0ecff;
+    --theme_default_border: none;
+    --theme_default_text: #426784;
+    --theme_default_alttext: #426784;
+    --theme_default_link: #426784;
+    --theme_default_hover: #0c2236;
+    --theme_default_spoiler: #426784;
+    --theme_default_drag: #a6d4f4;
+    --theme_default_icon: #426784;
+    --theme_default_btnbg: #EAEAEA;
+    --theme_default_btnborder: #e0e0e0;
+    --theme_default_altbtnbg: #f5f5f5;
+    --theme_default_btnbghover: #426784;
+    --theme_default_altbtnbghover: #fff;
+    --theme_nmswitch: #426784;
+    --theme_mpborder: rgb(66 103 132);
+    --theme_mubtn: #cccccc;
+    --theme_sbthumb: #ddd;
+    --theme_sbtrack: #EEE;
+}

@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="ru">
+	<head>
+		<title>
+			{{ index .Lang "board_catalog" }} /{{ .Board.ID }}/
+		</title>
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+		<link id="favicon" rel="shortcut icon" href="/favicon.ico" />
+		<meta name="viewport" content="initial-scale=1">
+		<link href="/static/css/normalize.css" type="text/css" rel="stylesheet">
+		<link href="/static/css/errorpage.css" type="text/css" rel="stylesheet">
+		<link rel="preconnect" href="https://fonts.googleapis.com">
+		<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+		<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@200..800&family=Roboto:ital,wght@0,100;0,300;0,400;0,500;0,700;0,900;1,100;1,300;1,400;1,500;1,700;1,900&display=swap" rel="stylesheet">
+		<script type="text/javascript" src="/static/js/jquery.js"></script>
+		<script>var lang = {{.LangJson}}</script>
+		<script type="text/javascript">
+			window.Store={memory:{},type:null,init:function(){;if(this.html5_available()){this.type='html5';this.html5_load()}else if(this.cookie_available()){this.type='cookie';this.cookie_load()}},get:function(path,default_value){var path_array=this.parse_path(path);if(!path_array)return default_value;var pointer=this.memory;var len=path_array.length;for(var i=0;i<len-1;i++){var element=path_array[i];if(!pointer.hasOwnProperty(element))return default_value;pointer=pointer[element]} var ret=pointer[path_array[i]];if(typeof(ret)=='undefined')return default_value;return ret},set:function(path,value){if(typeof(value)=='undefined')return!1;if(this.type)this[this.type+'_load']();var path_array=this.parse_path(path);if(!path_array)return!1;var pointer=this.memory;var len=path_array.length;for(var i=0;i<len-1;i++){var element=path_array[i];if(!pointer.hasOwnProperty(element))pointer[element]={};pointer=pointer[element];if(typeof(pointer)!='object')return!1} pointer[path_array[i]]=value;if(this.type)this[this.type+'_save']();return!0},del:function(path){var path_array=this.parse_path(path);if(!path_array)return!1;if(this.type)this[this.type+'_load']();var pointer=this.memory;var len=path_array.length;var element,i;for(i=0;i<len-1;i++){element=path_array[i];if(!pointer.hasOwnProperty(element))return!1;pointer=pointer[element]} if(pointer.hasOwnProperty(path_array[i]))delete(pointer[path_array[i]]);this.cleanup(path_array);if(this.type)this[this.type+'_save']();return!0},cleanup:function(path_array){var pointer=this.memory;var objects=[this.memory];var len=path_array.length;var i;for(i=0;i<len-2;i++){var element=path_array[i];pointer=pointer[element];objects.push(pointer)} for(i=len-2;i>=0;i--){var object=objects[i];var key=path_array[i];var is_empty=!0;$.each(object[key],function(){is_empty=!1;return!1});if(!is_empty)return!0;delete(object[key])}},reload:function(){if(this.type)this[this.type+'_load']()},'export':function(){return JSON.stringify(this.memory)},'import':function(data){try{this.memory=JSON.parse(data);if(this.type)this[this.type+'_save']();return!0}catch(e){return!1}},parse_path:function(path){var test=path.match(/[a-zA-Z0-9_\-\.]+/);if(test==null)return!1;if(!test.hasOwnProperty('0'))return!1;if(test[0]!=path)return!1;return path.split('.')},html5_available:function(){if(!window.Storage)return!1;if(!window.localStorage)return!1;try{localStorage.__storage_test='stortest';if(localStorage.__storage_test!='stortest')return!1;localStorage.removeItem('__storage_test');return!0}catch(e){return!1}},html5_load:function(){if(!localStorage.store)return;this.memory=JSON.parse(localStorage.store)},html5_save:function(){localStorage.store=JSON.stringify(this.memory)},cookie_available:function(){try{setCookie('__storage_test','stortest');if(getCookie('__storage_test')!='stortest')return!1;delCookie('__storage_test');return!0}catch(e){return!1}},cookie_load:function(){var str=getCookie('store');if(!str)return;this.memory=JSON.parse(str)},cookie_save:function(){var str=JSON.stringify(this.memory);setCookie('store',str,365*5)}}
+			Store.init();
+			
+			
+			
+			
+			window.st = localStorage.getItem('store') || '{}';
+			st = JSON.parse(st);
+			const nm=e=>{e.hasOwnProperty("styling")?void 0===e.styling.nightmode?window.matchMedia&&window.matchMedia("(prefers-color-scheme: dark)").matches&&(document.documentElement.dataset.theme="nightmode"):!0===e.styling.nightmode&&(document.documentElement.dataset.theme="nightmode"):window.matchMedia&&window.matchMedia("(prefers-color-scheme: dark)").matches&&(document.documentElement.dataset.theme="nightmode")};nm(st);
+			let board = "{{ .Board.ID }}";
+			let subj = "true";
+		</script>
+	</head>
+	<body>
+		<header class="header">
+			<a class="header__logo" href="/">
+				<img src="/static/img/logo.png" height="110">
+			</a>
+			<div class="header__title"><a href="/{{ .Board.ID }}/catalog.html">{{ index .Lang "board_catalog" }} /{{ .Board.ID }}/ </a></div>
+			<div class="header__meta">
+				<div class="header__ctlgnav"><a href="/{{ .Board.ID }}/" target="blank">← {{ index .Lang "board_catalog_back" }}</a></div>
+				<form name="filter_form" action method="GET" class="header__ctlgnav">
+					<input type="hidden" name="task" value="catalog" />
+					<input type="hidden" name="board" value="{{ .Board.ID }}" />
+					<select id="js-filter" class="input" name="filter">
+						<option value="standart">{{ index .Lang "board_catalog_by_bumps" }}</option>
+						<option value="num">{{ index .Lang "board_catalog_by_time" }}</option>
+					</select>
+				</form>
+				<input class="header__ctlgnav" id="js-csearch" name="csearch" type="text" value class="input" placeholder="Поиск...">
+				<label for="js-tags" class="header__ctlgnav"><span title="tags"> {{ index .Lang "board_catalog_tags" }} </span><input id="js-tags" name="tags" type="checkbox"></label>
+			</div>
+		</header>
+		<main class="wrapper-gallery ctlg" id="js-threads"></main>
+		<footer class="footer">
+			<script type="text/javascript" src="/static/js/catalog.js?v=2"></script>
+			<script type="text/javascript">
+				Catalog.init();
+			</script>
+		</footer>
+	</body>
+</html>

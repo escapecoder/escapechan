@@ -1,0 +1,21 @@
+			{{ template "top" . }}
+			{{define "base"}}
+			<div class="bg-body-tertiary p-4 rounded">
+				<div class="row">
+					<div class="col-12">
+						<h1 class="mb-3">Обслуживание сайта</h1>
+					</div>
+				</div>
+				<div>
+				<div>
+					<a class="btn btn-primary" href="/moder/service/render/boards">Пересобрать кэш досок</a>
+					<p class="mt-2">Будет перегенерирован HTML-код страниц досок и соответствующие им JSON-файлы.</a>
+				</div>
+				<div>
+					<a class="btn btn-primary" href="/moder/service/render/threads">Пересобрать кэш тредов</a>
+					<p class="mt-2">Будет перегенерирован HTML-код страниц тредов и соответствующие им JSON-файлы.</a>
+				</div>
+				</div>
+			</div>
+			{{end}}
+			{{ template "bottom" . }}
